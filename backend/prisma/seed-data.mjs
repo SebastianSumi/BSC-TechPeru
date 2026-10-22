@@ -1,9 +1,48 @@
 export const PERSPECTIVAS = [
-  { id: 'financiera', nombre: 'Financiera', icono: '💰', color: '#10b981', orden: 1 },
-  { id: 'clientes', nombre: 'Clientes', icono: '👥', color: '#3b82f6', orden: 2 },
-  { id: 'procesos', nombre: 'Procesos Internos', icono: '🔧', color: '#f59e0b', orden: 3 },
-  { id: 'aprendizaje', nombre: 'Aprendizaje y Crecimiento', icono: '📚', color: '#8b5cf6', orden: 4 },
+  { id: 'financiera', nombre: 'Financiera', icono: '💰', color: '#10b981', orden: 1, ponderacion: 30 },
+  { id: 'clientes', nombre: 'Clientes', icono: '👥', color: '#3b82f6', orden: 2, ponderacion: 30 },
+  { id: 'procesos', nombre: 'Procesos Internos', icono: '🔧', color: '#f59e0b', orden: 3, ponderacion: 20 },
+  { id: 'aprendizaje', nombre: 'Aprendizaje y Crecimiento', icono: '📚', color: '#8b5cf6', orden: 4, ponderacion: 20 },
 ]
+
+// Objetivos estratégicos (12). El codigo coincide con el prefijo usado en KPIS[].objetivo.
+export const OBJETIVOS = [
+  { codigo: 'OBJ-F1', nombre: 'Incrementar la Rentabilidad', perspectivaId: 'financiera', ponderacion: 40, orden: 1, descripcion: 'Mejorar los márgenes y el retorno sobre el patrimonio.' },
+  { codigo: 'OBJ-F2', nombre: 'Acelerar el Crecimiento de Ingresos', perspectivaId: 'financiera', ponderacion: 35, orden: 2, descripcion: 'Aumentar ventas y diversificar fuentes de ingreso.' },
+  { codigo: 'OBJ-F3', nombre: 'Optimizar la Estructura de Costos', perspectivaId: 'financiera', ponderacion: 25, orden: 3, descripcion: 'Reducir costos operativos y de adquisición.' },
+  { codigo: 'OBJ-C1', nombre: 'Maximizar la Satisfacción del Cliente', perspectivaId: 'clientes', ponderacion: 40, orden: 1, descripcion: 'Elevar la experiencia y satisfacción del cliente.' },
+  { codigo: 'OBJ-C2', nombre: 'Aumentar la Retención y Fidelización', perspectivaId: 'clientes', ponderacion: 35, orden: 2, descripcion: 'Retener clientes y aumentar recompras.' },
+  { codigo: 'OBJ-C3', nombre: 'Expandir la Base de Clientes', perspectivaId: 'clientes', ponderacion: 25, orden: 3, descripcion: 'Ampliar cobertura de mercado y nuevos clientes.' },
+  { codigo: 'OBJ-P1', nombre: 'Excelencia en Operaciones y Calidad', perspectivaId: 'procesos', ponderacion: 40, orden: 1, descripcion: 'Optimizar entregas, calidad y productividad.' },
+  { codigo: 'OBJ-P2', nombre: 'Innovación y Desarrollo de Producto', perspectivaId: 'procesos', ponderacion: 35, orden: 2, descripcion: 'Acelerar innovación y lanzamientos.' },
+  { codigo: 'OBJ-P3', nombre: 'Gestión Eficiente de Proveedores', perspectivaId: 'procesos', ponderacion: 25, orden: 3, descripcion: 'Mejorar desempeño y costos de la cadena de suministro.' },
+  { codigo: 'OBJ-A1', nombre: 'Desarrollar el Capital Humano', perspectivaId: 'aprendizaje', ponderacion: 40, orden: 1, descripcion: 'Fortalecer competencias y desarrollo del personal.' },
+  { codigo: 'OBJ-A2', nombre: 'Fortalecer la Cultura y el Clima', perspectivaId: 'aprendizaje', ponderacion: 35, orden: 2, descripcion: 'Mejorar satisfacción, clima y reducir rotación.' },
+  { codigo: 'OBJ-A3', nombre: 'Impulsar la Innovación Organizacional', perspectivaId: 'aprendizaje', ponderacion: 25, orden: 3, descripcion: 'Fomentar mejora continua e iniciativas del personal.' },
+]
+
+// Relaciones causa-efecto del mapa estratégico (aprendizaje -> procesos -> clientes -> financiera)
+export const RELACIONES_CAUSALES = [
+  { causa: 'OBJ-A1', efecto: 'OBJ-P1', descripcion: 'Personal capacitado mejora la calidad operativa.' },
+  { causa: 'OBJ-A2', efecto: 'OBJ-P1', descripcion: 'Un buen clima reduce errores y defectos.' },
+  { causa: 'OBJ-A3', efecto: 'OBJ-P2', descripcion: 'La innovación organizacional genera nuevos productos.' },
+  { causa: 'OBJ-P1', efecto: 'OBJ-C1', descripcion: 'Operaciones de calidad elevan la satisfacción del cliente.' },
+  { causa: 'OBJ-P2', efecto: 'OBJ-C3', descripcion: 'Nuevos productos atraen nuevos clientes.' },
+  { causa: 'OBJ-P3', efecto: 'OBJ-F3', descripcion: 'Mejores proveedores reducen la estructura de costos.' },
+  { causa: 'OBJ-C1', efecto: 'OBJ-C2', descripcion: 'Clientes satisfechos tienden a recompra y fidelidad.' },
+  { causa: 'OBJ-C2', efecto: 'OBJ-F2', descripcion: 'La retención sostiene el crecimiento de ingresos.' },
+  { causa: 'OBJ-C3', efecto: 'OBJ-F2', descripcion: 'Más clientes incrementan los ingresos.' },
+  { causa: 'OBJ-F3', efecto: 'OBJ-F1', descripcion: 'Optimizar costos mejora la rentabilidad.' },
+  { causa: 'OBJ-F2', efecto: 'OBJ-F1', descripcion: 'Mayores ingresos elevan la rentabilidad.' },
+]
+
+// Frecuencia por defecto segun el tipo de indicador (heuristica para la demo)
+export const FRECUENCIA_POR_PERSPECTIVA = {
+  financiera: 'TRIMESTRAL',
+  clientes: 'TRIMESTRAL',
+  procesos: 'MENSUAL',
+  aprendizaje: 'SEMESTRAL',
+}
 
 export const KPIS = [
   { id: 'F1.1', perspectivaId: 'financiera', objetivo: 'OBJ-F1: Incrementar la Rentabilidad', nombre: 'ROE – Retorno sobre Patrimonio', unidad: '%', meta: 18, real: 16.5, inverso: false, accion: 'ROE por debajo del 18% meta. Revisar estructura de capital y palanca financiera.', orden: 1 },

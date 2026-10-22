@@ -1,12 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   Activity,
+  ArrowLeftRight,
+  Bell,
+  BookOpen,
+  CalendarClock,
+  CheckCircle2,
   ChevronRight,
   FileBarChart,
+  FileWarning,
+  FolderKanban,
+  GitBranch,
+  Handshake,
   LayoutDashboard,
   LogOut,
+  Network,
+  Paperclip,
+  ScrollText,
+  Settings,
   Shield,
   SlidersHorizontal,
+  Target,
+  Upload,
   Users as UsersIcon,
 } from 'lucide-react'
 import { AuthProvider, useAuth } from './store/useAuth'
@@ -24,9 +39,44 @@ import { Login } from './components/Login'
 import { Reportes } from './components/Reportes'
 import { AdminPanel } from './components/AdminPanel'
 import { PeriodoSelector } from './components/PeriodoSelector'
+import { MapaEstrategicoView } from './components/MapaEstrategico'
+import { ObjetivosPanel } from './components/ObjetivosPanel'
+import { DiccionarioPanel } from './components/DiccionarioPanel'
+import { IniciativasPanel } from './components/IniciativasPanel'
+import { AlertasPanel } from './components/AlertasPanel'
+import { DesviacionesPanel } from './components/DesviacionesPanel'
+import { EvidenciasPanel } from './components/EvidenciasPanel'
+import { CompromisosPanel } from './components/CompromisosPanel'
+import { CalendarioPanel } from './components/CalendarioPanel'
+import { VersionesPanel } from './components/VersionesPanel'
+import { AprobacionesPanel } from './components/AprobacionesPanel'
+import { ComparacionPanel } from './components/ComparacionPanel'
+import { ImportPanel } from './components/ImportPanel'
+import { ConfigPanel } from './components/ConfigPanel'
+import { AuditoriaPanel } from './components/AuditoriaPanel'
 import type { KpiEvaluado, Periodo, PerspectivaId } from './data/types'
 
-type Tab = 'dashboard' | PerspectivaId | 'simulador' | 'reportes' | 'admin'
+type Tab =
+  | 'dashboard'
+  | PerspectivaId
+  | 'simulador'
+  | 'reportes'
+  | 'mapa'
+  | 'objetivos'
+  | 'diccionario'
+  | 'iniciativas'
+  | 'alertas'
+  | 'desviaciones'
+  | 'evidencias'
+  | 'compromisos'
+  | 'calendario'
+  | 'versiones'
+  | 'aprobaciones'
+  | 'comparacion'
+  | 'importacion'
+  | 'config'
+  | 'auditoria'
+  | 'admin'
 
 function AppContent() {
   const { usuario, cargando, logout, puede } = useAuth()
@@ -77,6 +127,21 @@ function AppContent() {
     { id: 'procesos', label: 'Procesos', icono: '🔧' },
     { id: 'aprendizaje', label: 'Aprendizaje', icono: '📚' },
     { id: 'simulador', label: 'Simulador', icon: <SlidersHorizontal size={15} /> },
+    { id: 'mapa', label: 'Mapa Estratégico', icon: <Network size={15} /> },
+    { id: 'objetivos', label: 'Objetivos', icon: <Target size={15} /> },
+    { id: 'diccionario', label: 'Diccionario KPI', icon: <BookOpen size={15} /> },
+    { id: 'iniciativas', label: 'Iniciativas', icon: <FolderKanban size={15} /> },
+    { id: 'alertas', label: 'Alertas', icon: <Bell size={15} /> },
+    { id: 'desviaciones', label: 'Desviaciones', icon: <FileWarning size={15} /> },
+    { id: 'evidencias', label: 'Evidencias', icon: <Paperclip size={15} /> },
+    { id: 'compromisos', label: 'Compromisos', icon: <Handshake size={15} /> },
+    { id: 'calendario', label: 'Calendario', icon: <CalendarClock size={15} /> },
+    { id: 'versiones', label: 'Versiones', icon: <GitBranch size={15} /> },
+    { id: 'aprobaciones', label: 'Aprobaciones', icon: <CheckCircle2 size={15} /> },
+    { id: 'comparacion', label: 'Comparación', icon: <ArrowLeftRight size={15} /> },
+    { id: 'importacion', label: 'Importar', icon: <Upload size={15} /> },
+    { id: 'auditoria', label: 'Auditoría', icon: <ScrollText size={15} /> },
+    { id: 'config', label: 'Configuración', icon: <Settings size={15} /> },
     { id: 'reportes', label: 'Reportes', icon: <FileBarChart size={15} /> },
     { id: 'admin', label: 'Administración', icon: <UsersIcon size={15} />, roles: ['ADMIN', 'GERENTE'] },
   ]
@@ -85,7 +150,7 @@ function AppContent() {
   const puedeGestionar = puede('ADMIN', 'GERENTE')
 
   return (
-    <div className="mx-auto min-h-screen max-w-6xl px-4 pb-24 pt-6 sm:px-6">
+    <div className="mx-auto min-h-screen max-w-7xl px-4 pb-24 pt-6 sm:px-6">
       <header className="mb-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -93,7 +158,7 @@ function AppContent() {
               <Activity className="text-[#3b82f6]" /> Balanced Scorecard — TechPeru SAC
             </h1>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              4 perspectivas · 12 objetivos · 36 KPIs · 2025
+              4 perspectivas · 12 objetivos · 36 KPIs · Gobierno, auditoría, alertas y trazabilidad
             </p>
             <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] text-[var(--muted)]">
               <span
@@ -169,7 +234,22 @@ function AppContent() {
       {tab !== 'dashboard' &&
         tab !== 'simulador' &&
         tab !== 'reportes' &&
-        tab !== 'admin' && (
+        tab !== 'admin' &&
+        tab !== 'mapa' &&
+        tab !== 'objetivos' &&
+        tab !== 'diccionario' &&
+        tab !== 'iniciativas' &&
+        tab !== 'alertas' &&
+        tab !== 'desviaciones' &&
+        tab !== 'evidencias' &&
+        tab !== 'compromisos' &&
+        tab !== 'calendario' &&
+        tab !== 'versiones' &&
+        tab !== 'aprobaciones' &&
+        tab !== 'comparacion' &&
+        tab !== 'importacion' &&
+        tab !== 'config' &&
+        tab !== 'auditoria' && (
           <PerspectivaView id={tab} evaluados={evaluados} onOpen={setSel} />
         )}
 
@@ -199,8 +279,22 @@ function AppContent() {
         </div>
       )}
 
+      {tab === 'mapa' && <MapaEstrategicoView periodos={periodos} />}
+      {tab === 'objetivos' && <ObjetivosPanel />}
+      {tab === 'diccionario' && <DiccionarioPanel periodos={periodos} />}
+      {tab === 'iniciativas' && <IniciativasPanel />}
+      {tab === 'alertas' && <AlertasPanel periodos={periodos} />}
+      {tab === 'desviaciones' && <DesviacionesPanel />}
+      {tab === 'evidencias' && <EvidenciasPanel />}
+      {tab === 'compromisos' && <CompromisosPanel />}
+      {tab === 'calendario' && <CalendarioPanel periodos={periodos} />}
+      {tab === 'versiones' && <VersionesPanel />}
+      {tab === 'aprobaciones' && <AprobacionesPanel />}
+      {tab === 'comparacion' && <ComparacionPanel periodos={periodos} />}
+      {tab === 'importacion' && <ImportPanel periodos={periodos} />}
+      {tab === 'config' && <ConfigPanel />}
+      {tab === 'auditoria' && <AuditoriaPanel />}
       {tab === 'reportes' && <Reportes periodoId={periodoId || null} />}
-
       {tab === 'admin' && <AdminPanel />}
 
       {selLive && <KpiModal kpi={selLive} onClose={() => setSel(null)} />}

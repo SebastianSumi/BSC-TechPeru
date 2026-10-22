@@ -1,7 +1,21 @@
 import type {
+  Alerta,
+  AprobacionItem,
   Asignacion,
+  Auditoria,
+  Comparacion,
+  Compromiso,
+  Config,
+  Desviacion,
+  EventoCalendario,
+  Evidencia,
+  Iniciativa,
   Kpi,
+  MapaEstrategico,
+  Objetivo,
   Periodo,
+  PlanVersion,
+  RelacionCausal,
   Reporte,
   ResumenApi,
   RolNombre,
@@ -109,7 +123,7 @@ export const api = {
     }),
 
   mediciones: (kpiId: string) =>
-    request<{ id: string; meta: number; real: number; nota?: string; periodo: Periodo }[]>(
+    request<{ id: string; meta: number; real: number; nota?: string; periodo: Periodo; estadoAprobacion?: string }[]>(
       `/kpis/${kpiId}/mediciones`,
     ),
 
@@ -147,4 +161,168 @@ export const api = {
     const q = qs.toString()
     return request<Reporte>(`/reportes${q ? `?${q}` : ''}`)
   },
+
+  // Objetivos
+  listarObjetivos: (perspectivaId?: string) => {
+    const qs = perspectivaId ? `?perspectiva=${perspectivaId}` : ''
+    return request<Objetivo[]>(`/objetivos${qs}`)
+  },
+  obtenerObjetivo: (id: string) => request<Objetivo>(`/objetivos/${id}`),
+  crearObjetivo: (data: Partial<Objetivo> & { codigo: string; perspectivaId: string }) =>
+    request<Objetivo>('/objetivos', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarObjetivo: (id: string, data: Partial<Objetivo>) =>
+    request<Objetivo>(`/objetivos/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  desactivarObjetivo: (id: string) =>
+    request<Objetivo>(`/objetivos/${id}`, { method: 'DELETE' }),
+
+  // Indicadores / Diccionario
+  diccionario: (perspectivaId?: string, periodoId?: string) => {
+    const qs = new URLSearchParams()
+    if (perspectivaId) qs.set('perspectiva', perspectivaId)
+    if (periodoId) qs.set('periodo', periodoId)
+    const q = qs.toString()
+    return request<Kpi[]>(`/indicadores/diccionario${q ? `?${q}` : ''}`)
+  },
+  crearIndicador: (data: Partial<Kpi> & { id: string; perspectivaId: string }) =>
+    request<Kpi>('/indicadores', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarIndicador: (id: string, data: Partial<Kpi>) =>
+    request<Kpi>(`/indicadores/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  desactivarIndicador: (id: string) =>
+    request<Kpi>(`/indicadores/${id}`, { method: 'DELETE' }),
+
+  // Iniciativas
+  listarIniciativas: (filtros: { objetivoId?: string; estado?: string } = {}) => {
+    const qs = new URLSearchParams()
+    if (filtros.objetivoId) qs.set('objetivo', filtros.objetivoId)
+    if (filtros.estado) qs.set('estado', filtros.estado)
+    const q = qs.toString()
+    return request<Iniciativa[]>(`/iniciativas${q ? `?${q}` : ''}`)
+  },
+  crearIniciativa: (data: Partial<Iniciativa>) =>
+    request<Iniciativa>('/iniciativas', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarIniciativa: (id: string, data: Partial<Iniciativa>) =>
+    request<Iniciativa>(`/iniciativas/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  eliminarIniciativa: (id: string) =>
+    request<void>(`/iniciativas/${id}`, { method: 'DELETE' }),
+
+  // Alertas
+  listarAlertas: (estado?: string) =>
+    request<Alerta[]>(`/alertas${estado ? `?estado=${estado}` : ''}`),
+  crearAlerta: (data: Partial<Alerta>) =>
+    request<Alerta>('/alertas', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarAlerta: (id: string, data: Partial<Alerta>) =>
+    request<Alerta>(`/alertas/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  generarAlertas: (periodoId: string) =>
+    request<{ generadas: number }>(`/alertas/generar?periodo=${periodoId}`, { method: 'POST' }),
+
+  // Desviaciones
+  listarDesviaciones: (filtros: { kpiId?: string; estado?: string } = {}) => {
+    const qs = new URLSearchParams()
+    if (filtros.kpiId) qs.set('kpi', filtros.kpiId)
+    if (filtros.estado) qs.set('estado', filtros.estado)
+    const q = qs.toString()
+    return request<Desviacion[]>(`/desviaciones${q ? `?${q}` : ''}`)
+  },
+  crearDesviacion: (data: Partial<Desviacion>) =>
+    request<Desviacion>('/desviaciones', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarDesviacion: (id: string, data: Partial<Desviacion>) =>
+    request<Desviacion>(`/desviaciones/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  eliminarDesviacion: (id: string) =>
+    request<void>(`/desviaciones/${id}`, { method: 'DELETE' }),
+
+  // Evidencias
+  listarEvidencias: (filtros: { kpiId?: string; medicionId?: string; desviacionId?: string } = {}) => {
+    const qs = new URLSearchParams()
+    if (filtros.kpiId) qs.set('kpi', filtros.kpiId)
+    if (filtros.medicionId) qs.set('medicion', filtros.medicionId)
+    if (filtros.desviacionId) qs.set('desviacion', filtros.desviacionId)
+    const q = qs.toString()
+    return request<Evidencia[]>(`/evidencias${q ? `?${q}` : ''}`)
+  },
+  crearEvidencia: (data: Partial<Evidencia>) =>
+    request<Evidencia>('/evidencias', { method: 'POST', body: JSON.stringify(data) }),
+  eliminarEvidencia: (id: string) =>
+    request<void>(`/evidencias/${id}`, { method: 'DELETE' }),
+
+  // Compromisos
+  listarCompromisos: (filtros: { estado?: string; responsableId?: string } = {}) => {
+    const qs = new URLSearchParams()
+    if (filtros.estado) qs.set('estado', filtros.estado)
+    if (filtros.responsableId) qs.set('responsable', filtros.responsableId)
+    const q = qs.toString()
+    return request<Compromiso[]>(`/compromisos${q ? `?${q}` : ''}`)
+  },
+  crearCompromiso: (data: Partial<Compromiso>) =>
+    request<Compromiso>('/compromisos', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarCompromiso: (id: string, data: Partial<Compromiso>) =>
+    request<Compromiso>(`/compromisos/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  eliminarCompromiso: (id: string) =>
+    request<void>(`/compromisos/${id}`, { method: 'DELETE' }),
+
+  // Calendario
+  listarCalendario: (periodoId?: string) =>
+    request<EventoCalendario[]>(`/calendario${periodoId ? `?periodo=${periodoId}` : ''}`),
+  crearEvento: (data: Partial<EventoCalendario>) =>
+    request<EventoCalendario>('/calendario', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarEvento: (id: string, data: Partial<EventoCalendario>) =>
+    request<EventoCalendario>(`/calendario/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  eliminarEvento: (id: string) =>
+    request<void>(`/calendario/${id}`, { method: 'DELETE' }),
+
+  // Versiones
+  listarVersiones: () => request<PlanVersion[]>('/versiones'),
+  obtenerVersion: (id: string) => request<PlanVersion>(`/versiones/${id}`),
+  crearVersion: (data: { version: string; descripcion?: string; periodoId?: string; publicadoPor?: string }) =>
+    request<PlanVersion>('/versiones', { method: 'POST', body: JSON.stringify(data) }),
+  publicarVersion: (id: string) =>
+    request<PlanVersion>(`/versiones/${id}/publicar`, { method: 'PATCH' }),
+  archivarVersion: (id: string) =>
+    request<PlanVersion>(`/versiones/${id}/archivar`, { method: 'PATCH' }),
+
+  // Mapa estratégico
+  mapaEstrategico: (periodoId?: string) =>
+    request<MapaEstrategico>(`/mapa${periodoId ? `?periodo=${periodoId}` : ''}`),
+  crearRelacion: (data: { causaId: string; efectoId: string; descripcion?: string }) =>
+    request<RelacionCausal>('/mapa/relaciones', { method: 'POST', body: JSON.stringify(data) }),
+  eliminarRelacion: (id: string) =>
+    request<void>(`/mapa/relaciones/${id}`, { method: 'DELETE' }),
+
+  // Comparación
+  comparar: (a: string, b: string) =>
+    request<Comparacion>(`/comparacion?a=${a}&b=${b}`),
+
+  // Importación
+  importarMediciones: (data: { periodoId: string; csv?: string; filas?: any[] }) =>
+    request<{ periodo: string; totalFilas: number; importadas: number; errores: any[] }>('/importacion/mediciones', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // Aprobaciones
+  aprobacionesPendientes: () => request<AprobacionItem[]>('/aprobaciones/pendientes'),
+  solicitarAprobacion: (medicionId: string) =>
+    request(`/aprobaciones/${medicionId}/solicitar`, { method: 'POST' }),
+  aprobarMedicion: (medicionId: string, observacion?: string) =>
+    request(`/aprobaciones/${medicionId}/aprobar`, { method: 'POST', body: JSON.stringify({ observacion }) }),
+  rechazarMedicion: (medicionId: string, observacion?: string) =>
+    request(`/aprobaciones/${medicionId}/rechazar`, { method: 'POST', body: JSON.stringify({ observacion }) }),
+  historialAprobacion: (medicionId: string) => request(`/aprobaciones/historial/${medicionId}`),
+
+  // Auditoría
+  auditoria: (filtros: { entidad?: string; usuario?: string; limite?: number } = {}) => {
+    const qs = new URLSearchParams()
+    if (filtros.entidad) qs.set('entidad', filtros.entidad)
+    if (filtros.usuario) qs.set('usuario', filtros.usuario)
+    if (filtros.limite) qs.set('limite', String(filtros.limite))
+    const q = qs.toString()
+    return request<Auditoria[]>(`/auditoria${q ? `?${q}` : ''}`)
+  },
+
+  // Config
+  obtenerConfig: () => request<Config>('/config'),
+  actualizarConfig: (data: Partial<Config>) =>
+    request<Config>('/config', { method: 'PATCH', body: JSON.stringify(data) }),
+  actualizarPonderacionPerspectiva: (id: string, ponderacion: number) =>
+    request(`/config/perspectivas/${id}/ponderacion`, { method: 'PATCH', body: JSON.stringify({ ponderacion }) }),
 }
+
