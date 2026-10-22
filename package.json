@@ -1,0 +1,13 @@
+{
+  "name": "bsc-techperu",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Balanced Scorecard TechPeru SAC 2025 — demo interactiva full-stack (React + NestJS + PostgreSQL)",
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "lint": "npm --prefix frontend run lint && npm --prefix backend run lint"
+  }
+}

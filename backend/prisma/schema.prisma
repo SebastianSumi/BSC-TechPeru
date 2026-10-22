@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RolNombre {
+  ADMIN
+  GERENTE
+  ANALISTA
+  RESPONSABLE
+}
+
+model Rol {
+  id          String   @id @default(cuid())
+  nombre      RolNombre @unique
+  descripcion String
+  usuarios    Usuario[]
+}
+
+model Usuario {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  nombre        String
+  passwordHash  String
+  rolId         String
+  rol           Rol      @relation(fields: [rolId], references: [id])
+  activo        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  asignaciones  Asignacion[]
+}
+
+model Perspectiva {
+  id            String     @id
+  nombre        String
+  icono         String
+  color         String
+  orden         Int
+  kpis          Kpi[]
+}
+
+model Kpi {
+  id          String      @id
+  perspectivaId String
+  perspectiva Perspectiva @relation(fields: [perspectivaId], references: [id])
+  objetivo    String
+  nombre      String
+  unidad      String
+  meta        Float
+  real        Float
+  inverso     Boolean     @default(false)
+  accion      String
+  orden       Int
+  mediciones  Medicion[]
+  asignaciones Asignacion[]
+}
+
+model Periodo {
+  id          String   @id @default(cuid())
+  nombre      String   @unique
+  anio        Int
+  trimestre   Int
+  fechaInicio DateTime
+  fechaFin    DateTime
+  activo      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  mediciones  Medicion[]
+}
+
+model Asignacion {
+  id          String   @id @default(cuid())
+  usuarioId   String
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+  kpiId       String
+  kpi         Kpi      @relation(fields: [kpiId], references: [id])
+  createdAt   DateTime @default(now())
+  @@unique([usuarioId, kpiId])
+}
+
+model Medicion {
+  id        String   @id @default(cuid())
+  kpiId     String
+  kpi       Kpi      @relation(fields: [kpiId], references: [id])
+  periodoId String
+  periodo   Periodo  @relation(fields: [periodoId], references: [id])
+  meta      Float
+  real      Float
+  nota      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([kpiId, periodoId])
+}

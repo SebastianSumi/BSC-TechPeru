@@ -27,3 +27,14 @@ dist-ssr
 # OS
 .DS_Store
 Thumbs.db
+
+# Env
+.env
+.env.local
+!.env.example
+
+# Prisma
+backend/prisma/*.db
+
+# TypeScript build info
+*.tsbuildinfo

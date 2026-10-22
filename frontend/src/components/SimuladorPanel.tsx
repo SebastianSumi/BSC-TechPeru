@@ -46,7 +46,7 @@ export function SimuladorPanel({
             </p>
             <div className="space-y-2.5">
               {kpis
-                .filter((k) => k.perspectiva === p.id)
+                .filter((k) => k.perspectivaId === p.id)
                 .map((k) => {
                   const ev = evaluar(k)
                   const min = 0

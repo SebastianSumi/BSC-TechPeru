@@ -41,7 +41,7 @@ export function resumenPorPerspectiva(kpis: Kpi[]): Record<PerspectivaId, Resume
   const ids: PerspectivaId[] = ['financiera', 'clientes', 'procesos', 'aprendizaje']
   const out = {} as Record<PerspectivaId, ResumenEstado>
   for (const id of ids) {
-    out[id] = resumen(kpis.filter((k) => k.perspectiva === id))
+    out[id] = resumen(kpis.filter((k) => k.perspectivaId === id))
   }
   return out
 }
