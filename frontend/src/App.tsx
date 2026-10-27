@@ -306,6 +306,7 @@ function AppContent() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [sidebarAbierto, setSidebarAbierto] = useState(false)
   const [orgMenu, setOrgMenu] = useState(false)
+  const [filtroDiccionario, setFiltroDiccionario] = useState('')
 
   const { empresas, activa, activaId, cambiar } = useEmpresa(!!usuario)
 
@@ -640,11 +641,24 @@ function AppContent() {
           )}
 
           {tab === 'mapa' && <MapaEstrategicoView periodos={periodos} />}
-          {tab === 'objetivos' && <ObjetivosPanel />}
+          {tab === 'objetivos' && (
+            <ObjetivosPanel
+              onVerKpis={(objetivoId) => {
+                setFiltroDiccionario(objetivoId)
+                navegar('diccionario')
+              }}
+            />
+          )}
           {tab === 'perspectivas' && <PerspectivasPanel />}
           {tab === 'tareas' && <TareasPanel />}
           {tab === 'recomendaciones' && <RecomendacionesPanel />}
-          {tab === 'diccionario' && <DiccionarioPanel periodos={periodos} />}
+          {tab === 'diccionario' && (
+            <DiccionarioPanel
+              periodos={periodos}
+              filtroObjetivo={filtroDiccionario}
+              onLimpiarFiltro={() => setFiltroDiccionario('')}
+            />
+          )}
           {tab === 'iniciativas' && <IniciativasPanel />}
           {tab === 'alertas' && <AlertasPanel periodos={periodos} />}
           {tab === 'desviaciones' && <DesviacionesPanel />}
@@ -677,7 +691,17 @@ function AppContent() {
         </footer>
       </div>
 
-      {selLive && <KpiModal kpi={selLive} onClose={() => setSel(null)} />}
+      {selLive && (
+        <KpiModal
+          kpi={selLive}
+          onClose={() => setSel(null)}
+          onVerEnDiccionario={(objetivoId) => {
+            setSel(null)
+            if (objetivoId) setFiltroDiccionario(objetivoId)
+            navegar('diccionario')
+          }}
+        />
+      )}
     </div>
   )
 }

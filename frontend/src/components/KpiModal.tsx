@@ -1,10 +1,49 @@
-import { X, Target, Activity, Lightbulb, TrendingDown, TrendingUp } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import {
+  Activity,
+  BookOpen,
+  CheckSquare,
+  Lightbulb,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  X,
+} from 'lucide-react'
 import { CumplimientoBar, EstadoBadge } from './EstadoBadge'
 import { ESTADO_META } from '../lib/bsc'
-import type { KpiEvaluado } from '../data/types'
+import {
+  Boton,
+  ModalAsignarEquipo,
+  ModalNuevaRecomendacion,
+  ModalNuevaTarea,
+} from './FlujoRapido'
+import { api } from '../lib/api'
+import { useAuth } from '../store/useAuth'
+import type { Kpi, KpiEvaluado } from '../data/types'
 
-export function KpiModal({ kpi, onClose }: { kpi: KpiEvaluado; onClose: () => void }) {
+export function KpiModal({
+  kpi,
+  onClose,
+  onVerEnDiccionario,
+}: {
+  kpi: KpiEvaluado
+  onClose: () => void
+  onVerEnDiccionario?: (objetivoId?: string) => void
+}) {
+  const { puede } = useAuth()
   const m = ESTADO_META[kpi.estado]
+  const [completo, setCompleto] = useState<Kpi | null>(null)
+  const [modal, setModal] = useState<'equipo' | 'tarea' | 'recomendacion' | null>(null)
+
+  useEffect(() => {
+    api.obtenerIndicador(kpi.id).then(setCompleto).catch(() => setCompleto(null))
+  }, [kpi.id])
+
+  const equipo = completo?.asignaciones ?? kpi.asignaciones ?? []
+  const objetivoId = kpi.objetivoId ?? completo?.objetivoId
+  const puedeEquipo = puede('ADMIN', 'GERENTE', 'RESPONSABLE')
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-[#0c1e35]/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
@@ -71,8 +110,74 @@ export function KpiModal({ kpi, onClose }: { kpi: KpiEvaluado; onClose: () => vo
             </p>
             {kpi.accion}
           </div>
+
+          <div
+            className="mt-3 rounded-xl border p-3"
+            style={{ borderColor: 'var(--border)' }}
+          >
+            <p className="mb-2 flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-[var(--muted)]">
+              <Users size={13} /> Equipo responsable
+            </p>
+            {equipo.length === 0 ? (
+              <p className="text-[11px] text-[var(--muted)]">
+                Sin personas asignadas. Asigna un equipo para que sea responsable del KPI.
+              </p>
+            ) : (
+              <ul className="space-y-1">
+                {equipo.map((a) => (
+                  <li key={a.id ?? a.usuarioId} className="flex items-center gap-2 text-[11px]">
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: m.color }} />
+                    {a.usuario?.nombre ?? a.usuarioId}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {puedeEquipo && (
+              <Boton variante="secundario" onClick={() => setModal('equipo')}>
+                <Users size={13} /> Asignar equipo
+              </Boton>
+            )}
+            <Boton variante="secundario" onClick={() => setModal('tarea')}>
+              <CheckSquare size={13} /> Nueva tarea
+            </Boton>
+            <Boton variante="secundario" onClick={() => setModal('recomendacion')}>
+              <Lightbulb size={13} /> Recomendación
+            </Boton>
+            {onVerEnDiccionario && (
+              <Boton variante="secundario" onClick={() => onVerEnDiccionario(objetivoId)}>
+                <BookOpen size={13} /> Ver en diccionario
+              </Boton>
+            )}
+          </div>
         </div>
       </div>
+
+      {modal === 'equipo' && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ModalAsignarEquipo kpi={kpi} onCerrado={() => setModal(null)} />
+        </div>
+      )}
+      {modal === 'tarea' && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ModalNuevaTarea
+            objetivoId={objetivoId}
+            kpi={kpi}
+            onCerrado={() => setModal(null)}
+          />
+        </div>
+      )}
+      {modal === 'recomendacion' && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ModalNuevaRecomendacion
+            objetivoId={objetivoId}
+            kpi={kpi}
+            onCerrado={() => setModal(null)}
+          />
+        </div>
+      )}
     </div>
   )
 }

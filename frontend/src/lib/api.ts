@@ -322,12 +322,18 @@ export const api = {
     const q = qs.toString()
     return request<Kpi[]>(`/indicadores/diccionario${q ? `?${q}` : ''}`)
   },
-  crearIndicador: (data: Partial<Kpi> & { id: string; perspectivaId: string }) =>
+  crearIndicador: (data: Partial<Kpi> & { id: string; perspectivaId: string; objetivoId: string }) =>
     request<Kpi>('/indicadores', { method: 'POST', body: JSON.stringify(data) }),
   actualizarIndicador: (id: string, data: Partial<Kpi>) =>
     request<Kpi>(`/indicadores/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   desactivarIndicador: (id: string) =>
     request<Kpi>(`/indicadores/${id}`, { method: 'DELETE' }),
+  obtenerIndicador: (id: string) => request<Kpi>(`/indicadores/${id}`),
+  asignarEquipo: (id: string, usuarioIds: string[]) =>
+    request<Kpi>(`/indicadores/${id}/equipo`, {
+      method: 'PATCH',
+      body: JSON.stringify({ usuarioIds }),
+    }),
 
   // Iniciativas
   listarIniciativas: (filtros: { objetivoId?: string; estado?: string } = {}) => {

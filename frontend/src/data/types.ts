@@ -76,6 +76,7 @@ export interface Kpi {
   responsableValidacion?: string
   responsableId?: string | null
   responsable?: Usuario | null
+  asignaciones?: Asignacion[]
   umbralCumplido?: number
   umbralAlerta?: number
   rangoMin?: number | null
