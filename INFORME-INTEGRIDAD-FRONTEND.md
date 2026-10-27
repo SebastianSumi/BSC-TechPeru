@@ -3,6 +3,10 @@
 > **Fecha:** 27-10-2026 · **Rama:** `main` (head `6a29031`) · **Alcance:** solo diagnóstico y documentación.
 > **No se modificó código en la elaboración de este informe.**
 >
+> **Nota de actualización:** las secciones 1-8 describen el diagnóstico previo a la refactorización.
+> La sección final **«Actualización de implementación full-stack»** documenta los cambios ya realizados
+> y los pendientes después de ese diagnóstico.
+>
 > **Método:** lectura estática de todo el código (37 archivos de `frontend/src`, 21 controladores del backend),
 > conteo de rutas HTTP por decorador, mapeo `método de lib/api.ts → ruta backend → llamador en la UI`,
 > más **verificación en vivo** contra el backend en `localhost:3000` (peticiones `GET` con token de los 4 roles).
@@ -286,3 +290,137 @@ curl -s "localhost:3000/aprobaciones/pendientes" -H "Authorization: Bearer $TOK"
 curl -s "localhost:3000/perspectivas"          -H "Authorization: Bearer $TOK"   # colores BD
 curl -s -o /dev/null -w '%{http_code}\n' localhost:3000/auditoria -H "Authorization: Bearer $TOK"  # 403 con analista
 ```
+
+---
+
+# Actualización de implementación full-stack
+
+> **Fecha:** 27-10-2026
+> **Estado:** implementación principal completa a nivel de código; validación real contra PostgreSQL pendiente.
+> **Nota:** los cambios están en el árbol de trabajo y **no se ha realizado commit**.
+
+## 1. Estado general
+
+La refactorización full-stack de BSC TechPeru ya cubre backend, frontend, esquema Prisma, migración y seed. La lógica de cumplimiento quedó centralizada en el backend y el frontend dejó de calcular porcentajes por su cuenta.
+
+Sin embargo, todavía no puede considerarse cerrada ni lista para producción porque:
+
+- No se ha ejecutado la migración ni el seed contra una base real.
+- No se han probado los flujos completos con datos reales.
+- Persisten algunos huecos funcionales y de endurecimiento.
+- No se ha actualizado la documentación de endpoints.
+
+## 2. Cambios realizados
+
+### 2.1 Backend
+
+- Modelo Prisma ampliado:
+  - Catálogos/perspectivas dinámicas.
+  - Objetivos con responsable y código opcional.
+  - KPIs con unidad, tipo, rangos, umbrales, decimales y agregación.
+  - Tareas, resultados y validación.
+  - Evidencias de texto, archivo y enlace.
+  - Recomendaciones fijadas.
+  - Configuración ampliada por empresa.
+- Migración creada:
+  - `backend/prisma/migrations/20261027120000_catalogos_objetivos_kpis_tareas/migration.sql`
+  - Incluye backfill de KPIs sin objetivo y restricciones únicas parciales para recomendaciones fijadas.
+- Nuevos módulos:
+  - `catalogos`
+  - `comun/acceso`
+  - `cumplimiento`
+  - `recomendaciones`
+  - `tareas`
+  - `reportes`
+- Centralización del cálculo:
+  - `CumplimientoService` evalúa KPIs y agrega objetivos.
+  - El API BSC heredado consume el mismo servicio.
+- Funcionalidad implementada:
+  - CRUD de perspectivas/catálogos.
+  - CRUD de recomendaciones y fijación única por objetivo/KPI.
+  - Tareas, resultados, validación y aplicación de resultados al KPI.
+  - Evidencias con almacenamiento local y descarga.
+  - Reporte de objetivos, detalle y exportación CSV.
+  - Permisos por rol, responsable de objetivo/KPI y asignaciones.
+- Contrato de reporte ajustado:
+  - El detalle usa `tareasDetalle` para no sobrescribir el resumen `tareas`.
+- Seed actualizado:
+  - Nuevas perspectivas, KPIs, tareas, resultados, evidencias y recomendaciones de ejemplo.
+  - Configuración por empresa con `agregacionResultados: 'ULTIMO'`.
+  - Corregidas escrituras históricas de mediciones que no tenían `await`.
+
+### 2.2 Frontend
+
+- Tipos y API ampliados para todos los módulos nuevos.
+- `frontend/src/lib/bsc.ts` dejó de calcular cumplimiento de forma independiente; consume valores del backend.
+- `frontend/src/store/useBsc.ts` actualiza los KPIs con la respuesta del backend.
+- Nuevas pantallas:
+  - `PerspectivasPanel`
+  - `TareasPanel`
+  - `RecomendacionesPanel`
+- Pantallas adaptadas:
+  - `ObjetivosPanel`: perspectivas dinámicas, responsables y código opcional.
+  - `Reportes`: reporte de objetivos, detalle, filtros y CSV.
+  - `EvidenciasPanel`: texto, archivo y enlace; descarga y eliminación.
+  - `ConfigPanel`: nuevos parámetros de cumplimiento y reportes.
+  - `DiccionarioPanel`: campos nuevos y `estadoKey`.
+- Navegación y rutas agregadas en `App.tsx`.
+- Validación adicional en el formulario de recomendaciones para exigir objetivo o KPI.
+
+### 2.3 Verificación realizada
+
+- `backend/npm run build`: correcto.
+- `frontend/npm run build`: correcto.
+- `npx prisma validate` con URL ficticia: esquema válido.
+- `node --check` en `seed.mjs`, `seed-data.mjs` y `seed-empresas.mjs`: correcto.
+- Lint: solo warnings, sin errores.
+- No existen tests backend/frontend relevantes; no se ejecutó una suite de pruebas.
+
+## 3. Cambios faltantes y riesgos
+
+### 3.1 Bloqueante: validación contra base de datos
+
+No se ha ejecutado:
+
+- `prisma migrate deploy` o `prisma migrate dev`.
+- `npm run prisma:seed`.
+- Pruebas reales de login, objetivos, KPIs, reportes, tareas, evidencias y recomendaciones.
+- Verificación de los índices únicos parciales de recomendaciones.
+- Verificación del backfill de KPIs existentes.
+
+Además:
+
+- No existe `backend/.env`.
+- Se detectó PostgreSQL 18 activo en `localhost:5432`, pero sin credenciales conocidas.
+- Si la base existente fue creada con `db push`, puede requerir baseline de migraciones.
+
+### 3.2 Funcionalidad frontend pendiente
+
+- No hay formulario de creación/edición de KPIs; el diccionario y `KpiModal` son principalmente de consulta.
+- El fallback local de KPIs, cuando el API no responde, puede mostrar cumplimiento `0` y estado crítico.
+- La documentación de los nuevos endpoints y flujos no está actualizada.
+
+### 3.3 Endurecimiento backend pendiente
+
+Detectado durante la revisión:
+
+- `IndicadoresService.crear/actualizar` no valida completamente que la perspectiva pertenezca a la empresa ni que coincida con la perspectiva del objetivo.
+- La validación de evidencias solo cubre tareas; adjuntar a KPI/medición/desviación no verifica permisos de forma equivalente.
+- Un resultado ya aplicado al KPI podría rechazarse y dejar el KPI sin reversión.
+- Los catálogos permiten crear un código por empresa que puede duplicar un catálogo global existente.
+- El endpoint de ponderación de perspectivas no valida rango ni registra auditoría.
+- El API BSC heredado no filtra explícitamente KPIs/perspectivas inactivas.
+
+### 3.4 Calidad
+
+- Warnings de lint en `useAuth`, `RecomendacionesPanel`, `Reportes` y algunos servicios backend.
+- Warning de Vite por tamaño del bundle.
+- No se agregaron pruebas automatizadas.
+
+## 4. Siguiente paso recomendado
+
+1. Configurar una base PostgreSQL de desarrollo y ejecutar migración y seed.
+2. Hacer smoke test completo de los flujos principales y corregir diferencias reales de contrato.
+3. Completar el formulario de KPIs si forma parte del alcance funcional.
+4. Aplicar las correcciones de endurecimiento backend.
+5. Repetir builds, lint y pruebas.
