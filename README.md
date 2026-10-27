@@ -19,6 +19,10 @@ Demo web interactiva que transforma el libro de Excel **Balanced Scorecard (BSC)
 - [5. Cómo ejecutar el proyecto](#5-cómo-ejecutar-el-proyecto)
 - [6. Verificación](#6-verificación)
 - [7. Roadmap](#7-roadmap)
+- [Documentación adicional (`docs/`)](#documentación-adicional-docs)
+  - [`docs/arquitectura.md`](docs/arquitectura.md) — Sección 3 ampliada: árbol de módulos NestJS, capa de servicios (`/iniciativas`, `/alertas`, `/auditoria`, `/importacion`) y cobertura de los 10 módulos
+  - [`docs/modulos-4-6-9-10.md`](docs/modulos-4-6-9-10.md) — especificaciones formales de los módulos 4, 6, 9 y 10
+  - [`docs/roadmap.md`](docs/roadmap.md) — detalle de las fases 4 y 5
 
 ---
 
@@ -117,6 +121,7 @@ Proyecto **full-stack**:
 
 ```
 BSC-TechPeru/
+├── docs/                    # Documentación adicional (arquitectura, módulos, roadmap)
 ├── frontend/                 # React 19 + Vite + Tailwind v4 + Recharts
 │   └── src/
 │       ├── App.tsx           # Layout, navegación por tabs y vistas
@@ -135,18 +140,51 @@ BSC-TechPeru/
     │   └── seed-data.mjs     # Datos extraídos del Excel
     └── src/
         ├── prisma/           # PrismaService + PrismaModule (global)
+        ├── comun/            # AccesoService (visibilidad por rol y compañía)
         ├── auth/             # JWT, guards globales (@Roles/@Public), usuarios y roles
+        ├── empresas/         # Perfiles de compañía (TechPeru, Nova Retail, Andes Salud)
         ├── periodos/         # CRUD de períodos + activación
         ├── asignaciones/     # Asignación de objetivos a usuarios
-        ├── bsc/
-        │   ├── bsc.logic.ts      # calcularCumplimiento() + clasificarEstado()
-        │   ├── bsc.service.ts    # Acceso a datos + evaluación (resumen, reportes)
-        │   └── bsc.controller.ts # Endpoints REST
+        ├── config/           # Umbrales, formato, agregación y notificarCriticos
+        ├── catalogos/        # Catálogos (perspectivas y objetivos base)
+        ├── objetivos/        # Objetivos estratégicos
+        ├── indicadores/      # Diccionario de indicadores (KPI), equipo y mediciones
+        ├── cumplimiento/     # Reglas de cumplimiento por compañía (evaluar/reglas)
+        ├── bsc/              # Lógica BSC: resumen, reportes e índices
+        ├── iniciativas/      # Módulo 4: proyectos asociados a objetivos (presupuesto/avance)
+        ├── tareas/           # Módulo 4: actividades, resultados y validaciones
+        ├── calendario/       # Módulo 4: hitos y fechas clave
+        ├── alertas/          # Módulo 6: motor de alertas automáticas por KPI crítico
+        ├── auditoria/        # Módulo 9: log de cambios (quién/cuándo/qué)
+        ├── importacion/      # Módulo 10: carga masiva de mediciones (CSV/JSON)
+        ├── reportes/         # Módulo 10: reportes por objetivo + exportación CSV
+        ├── evidencias/       # Evidencias con almacenamiento de archivos
+        ├── desviaciones/     # Análisis de desviaciones
+        ├── recomendaciones/  # Recomendaciones del plan
+        ├── compromisos/      # Compromisos de reuniones
+        ├── aprobaciones/     # Flujo de aprobación del plan
+        ├── versiones/        # Versiones/snapshots del plan estratégico
+        ├── mapa/             # Mapa estratégico y relaciones causales
         └── main.ts           # Bootstrap + CORS
 ```
 
 **Stack frontend:** React 19 · TypeScript · Vite · Tailwind CSS v4 · Recharts · lucide-react.
 **Stack backend:** NestJS · Prisma ORM · PostgreSQL · Passport/JWT (roles).
+
+> El árbol completo, la capa de servicios y la cobertura de los 10 módulos del diagrama
+> funcional están en [`docs/arquitectura.md`](docs/arquitectura.md).
+
+### Capa de servicios adicionales
+
+| Módulo | Rutas | Función |
+|--------|-------|---------|
+| **Gestión de iniciativas** (4) | `/iniciativas` | CRUD de proyectos ligados a objetivos: fechas, responsable, presupuesto y avance; actividades en `/tareas`, hitos en `/calendario` |
+| **Alertas automáticas** (6) | `/alertas`, `/alertas/generar` | Motor por período (KPIs críticos, sin duplicados, severidad) y ciclo de vida NUEVA→RECONOCIDA→RESUELTA/DESCARTADA |
+| **Auditoría** (9) | `/auditoria` | Registro `quién/cuándo/qué` en 16 servicios (44 puntos); lectura filtrable para ADMIN/GERENTE |
+| **Importación** (10) | `/importacion/mediciones` | Carga masiva de mediciones (CSV o filas JSON) con validación por fila y reporte de errores |
+
+Endpoints detallados con roles: [`docs/arquitectura.md`](docs/arquitectura.md#3-endpoints-por-módulo).
+
 
 ### Modelo de datos (backend)
 
@@ -159,6 +197,10 @@ BSC-TechPeru/
 | `Periodo` | Trimestres por compañía (`@@unique([empresaId, nombre])`) con bandera `activo` |
 | `Medicion` | Valor `meta`/`real` de un KPI **en un período** (histórico) |
 | `Asignacion` | Objetivo (KPI) asignado a un usuario responsable |
+| `Iniciativa` | Proyecto ligado a un objetivo: fechas, responsable, presupuesto, avance, estado |
+| `Tarea` / `ResultadoTarea` | Actividades del plan, con entregables validables y evidencias |
+| `Alerta` | Alertas por KPI crítico o manuales: severidad, estado, destinatario, leída |
+| `Auditoria` | Log de cambios: usuario, acción, entidad, `entidadId` y `detalle` (JSON) |
 
 ### Roles y permisos
 
@@ -198,6 +240,18 @@ BSC-TechPeru/
 | `POST` | `/asignaciones` | ADMIN, GERENTE | Asigna un objetivo |
 | `DELETE` | `/asignaciones/:id` | ADMIN, GERENTE | Quita asignación |
 | `GET` | `/reportes` | autenticado | Reporte dinámico (`?perspectiva=&periodo=&usuario=`) |
+| `GET` | `/iniciativas?objetivo=&estado=` | autenticado | Lista proyectos/iniciativas de la compañía |
+| `GET` | `/iniciativas/:id` | autenticado | Detalle de una iniciativa |
+| `POST` | `/iniciativas` | ADMIN, GERENTE | Crea iniciativa (código único + objetivo) |
+| `PATCH` | `/iniciativas/:id` | ADMIN, GERENTE, ANALISTA | Actualiza fechas, presupuesto, avance, estado |
+| `DELETE` | `/iniciativas/:id` | ADMIN, GERENTE | Elimina iniciativa |
+| `GET` | `/alertas?estado=&empresa=` | autenticado | Alertas (RESPONSABLE: solo las suyas) |
+| `POST` | `/alertas` | ADMIN, GERENTE | Alerta manual |
+| `POST` | `/alertas/generar?periodo=` | ADMIN, GERENTE, ANALISTA | Motor: genera alertas de KPIs críticos del período |
+| `PATCH` | `/alertas/:id` | autenticado | Cambia estado (RECONOCIDA/RESUELTA/DESCARTADA) o `leida` |
+| `GET` | `/auditoria?entidad=&usuario=&limite=` | ADMIN, GERENTE | Historial de cambios (200 eventos) |
+| `POST` | `/importacion/mediciones` | ADMIN, GERENTE, ANALISTA | Importa mediciones masivamente (CSV o `filas`) |
+| `GET` | `/reportes/objetivos/exportar` | autenticado | Exporta el reporte de objetivos a CSV |
 
 > **Multi-compañía:** los listados del BSC (`/kpis`, `/resumen`, `/reportes`, `/periodos`, `/objetivos`, `/mapa`, `/indicadores/diccionario`, `/versiones`, `/comparacion`, `/alertas`, `/desviaciones`, `/evidencias`, `/compromisos`, `/calendario`, `/aprobaciones`, `/asignaciones`, `/iniciativas`) aceptan `?empresa=<id>` y filtran por compañía. El frontend envía ese parámetro automáticamente en cada petición según la compañía activa.
 
@@ -228,6 +282,18 @@ Ejemplo de `/resumen` (período Q4):
 6. **Simulador de escenarios** ⚡ — desliza el valor `Real` de cualquier KPI y observa cómo se recalcula **en vivo** el índice global (persistido en PostgreSQL).
 7. **Reportes dinámicos** — filtra por perspectiva, período y responsable; tabla con semáforo, KPIs críticos resaltados y exportación a **CSV** e **impresión**.
 8. **Administración** — gestión de usuarios/roles y **asignación de objetivos (KPIs)** a responsables.
+
+### Módulos adicionales del diagrama funcional
+
+Los módulos 1–3, 5, 7 y 8 se cubren con las funcionalidades 1–8 anteriores. Los cuatro
+módulos con especificación formal propia quedan documentados en `docs/`:
+
+| Módulo | En la demo | Especificación |
+|--------|------------|----------------|
+| **4 · Gestión de iniciativas** | Pestañas **Iniciativas** (proyectos con fechas, responsable, presupuesto y avance), **Tareas** (actividades con resultados/validaciones) y **Calendario** (hitos) | [`docs/modulos-4-6-9-10.md`](docs/modulos-4-6-9-10.md#módulo-4--gestión-de-iniciativas) |
+| **6 · Alertas automáticas** | Pestaña **Alertas**: motor por período para KPIs críticos (sin duplicados, severidad) y ciclo de vida NUEVA → RECONOCIDA → RESUELTA/DESCARTADA | [`docs/modulos-4-6-9-10.md`](docs/modulos-4-6-9-10.md#módulo-6--alertas-automáticas) |
+| **9 · Auditoría (log de cambios)** | Pestaña **Auditoría** con el historial *quién/cuándo/qué* (16 servicios lo alimentan); lectura para ADMIN/GERENTE | [`docs/modulos-4-6-9-10.md`](docs/modulos-4-6-9-10.md#módulo-9--auditoría-log-de-cambios) |
+| **10 · Integraciones** | Pestaña **Importación** (carga masiva de mediciones en CSV), exportación a **CSV** de reportes y API REST con JWT como conector | [`docs/modulos-4-6-9-10.md`](docs/modulos-4-6-9-10.md#módulo-10--integraciones) |
 
 ### Usuarios de demostración
 
@@ -363,5 +429,32 @@ cd ../backend && npm run build && npm run lint
 - [x] **Fase 1:** demo frontend con datos locales y simulador en vivo.
 - [x] **Fase 2:** backend con **NestJS + Prisma + PostgreSQL** que sirve los KPIs y persiste las ediciones del simulador.
 - [x] **Fase 3:** autenticación con roles, trabajo por períodos trimestrales, asignación de objetivos y reportes dinámicos.
-- [ ] **Fase 4:** carga de datos reales desde Excel/CSV, guardar múltiples escenarios del simulador y exportación de reportes (PDF).
-- [ ] **Fase 5:** alertas automáticas por KPIs críticos.
+- [ ] **Fase 4 — Integraciones y gestión de proyectos** (módulos 4 y 10):
+  - [x] Importación masiva de mediciones en CSV/JSON con validación por fila (`/importacion/mediciones`).
+  - [x] Exportación de reportes a CSV (`/reportes/objetivos/exportar`).
+  - [x] CRUD de **iniciativas** ligadas a objetivos con fechas, responsable, presupuesto y avance (módulo 4).
+  - [ ] Carga desde **Excel (.xlsx)** con plantilla descargable y modo previa (`dryRun`).
+  - [ ] Exportación masiva de catálogos (KPIs, objetivos, alertas, auditoría).
+  - [ ] Conectores **ERP/CRM**: OAuth2 saliente, webhooks entrantes firmados y sincronización programada.
+  - [ ] Vincular tareas a iniciativas, desglose de recursos/presupuesto y avance calculado.
+  - [ ] Guardar múltiples escenarios del simulador y exportación de reportes a **PDF**.
+- [ ] **Fase 5 — Alertas automáticas y auditoría detallada** (módulos 6 y 9):
+  - [x] Motor de alertas por período para KPIs críticos, con configuración por compañía y control de duplicados (módulo 6).
+  - [x] Ciclo de vida de alertas y log de cambios transversal (`/auditoria`) con pestañas en la UI (módulo 9).
+  - [ ] Envío de **correos** (SMTP) y avisos **en tiempo real** (SSE/WebSocket).
+  - [ ] Alertas por **retraso de iniciativas/tareas** (cron diario).
+  - [ ] Auditoría **campo a campo**: `valor anterior → valor nuevo` por campo en los KPIs, con filtros y exportación.
+
+> Detalle ejecutable de las fases 4 y 5 en [`docs/roadmap.md`](docs/roadmap.md).
+
+---
+
+## Documentación adicional (`docs/`)
+
+| Documento | Contenido |
+|-----------|-----------|
+| [`docs/arquitectura.md`](docs/arquitectura.md) | Sección 3 ampliada: árbol completo de los 24 módulos NestJS, capa de servicios adicionales (`/iniciativas`, `/alertas`, `/auditoria`, `/importacion`) con endpoints y roles, modelos de datos nuevos y cobertura de los 10 módulos del diagrama funcional |
+| [`docs/modulos-4-6-9-10.md`](docs/modulos-4-6-9-10.md) | Especificaciones formales de los módulos **4 (iniciativas)**, **6 (alertas automáticas)**, **9 (auditoría)** y **10 (integraciones)**: modelo de datos, reglas de negocio, endpoints, interfaz y pendientes |
+| [`docs/roadmap.md`](docs/roadmap.md) | Detalle de la **Fase 4** (integraciones + gestión de proyectos) y la **Fase 5** (canales de alertas + auditoría campo a campo) con el estado de cada entregable |
+
+
