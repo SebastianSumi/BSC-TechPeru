@@ -151,46 +151,58 @@ function AppContent() {
 
   return (
     <div className="mx-auto min-h-screen max-w-7xl px-4 pb-24 pt-6 sm:px-6">
-      <header className="mb-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="flex items-center gap-2 text-xl font-bold sm:text-2xl">
-              <Activity className="text-[#3b82f6]" /> Balanced Scorecard — TechPeru SAC
-            </h1>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              4 perspectivas · 12 objetivos · 36 KPIs · Gobierno, auditoría, alertas y trazabilidad
-            </p>
-            <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] text-[var(--muted)]">
-              <span
-                className="inline-block h-2 w-2 rounded-full"
-                style={{ background: source === 'api' ? '#10b981' : '#f59e0b' }}
-              />
-              {source === 'api' ? 'Conectado al API (PostgreSQL)' : 'Datos locales (API offline)'}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div
-              className="rounded-xl border px-4 py-2 text-right"
-              style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-            >
-              <p className="text-[11px] text-[var(--muted)]">Índice global</p>
-              <p className="text-2xl font-bold tabular-nums">{resumenGlobal.indiceGlobal}%</p>
-              {dirty && <span className="text-[10px] text-[#f59e0b]">escenario simulado</span>}
-            </div>
-            <div
-              className="rounded-xl border px-3 py-2 text-right"
-              style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-            >
-              <p className="flex items-center justify-end gap-1 text-xs font-semibold">
-                <Shield size={12} className="text-[#3b82f6]" /> {usuario.rol}
+      <header className="mb-6">
+        <div className="relative overflow-hidden rounded-2xl border px-5 py-4 shadow-sm sm:px-6" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)', borderColor: 'var(--border)' }}>
+          <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(37,99,235,0.08),transparent)]" />
+          <div className="relative flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-white shadow-sm">
+                  <Activity size={18} />
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Balanced Scorecard — TechPeru SAC</h1>
+                  <p className="text-xs text-[var(--muted)]">
+                    4 perspectivas · 12 objetivos · 36 KPIs · Gobierno, auditoría, alertas y trazabilidad
+                  </p>
+                </div>
+              </div>
+              <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-[var(--muted)]">
+                <span
+                  className="inline-block h-1.5 w-1.5 rounded-full"
+                  style={{ background: source === 'api' ? '#22c55e' : '#f59e0b', boxShadow: source === 'api' ? '0 0 0 4px rgba(34,197,94,0.08)' : '0 0 0 4px rgba(245,158,11,0.08)' }}
+                />
+                {source === 'api' ? 'Conectado al API (PostgreSQL)' : 'Datos locales (API offline)'}
               </p>
-              <p className="text-[11px] text-[var(--muted)]">{usuario.nombre}</p>
-              <button
-                onClick={logout}
-                className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-[#ef4444] hover:underline"
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div
+                className="rounded-xl border px-4 py-2 text-right shadow-sm"
+                style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
               >
-                <LogOut size={10} /> Salir
-              </button>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">Índice global</p>
+                <p className="text-2xl font-semibold tabular-nums">{resumenGlobal.indiceGlobal}%</p>
+                {dirty && <span className="text-[10px] text-[#f59e0b]">escenario simulado</span>}
+              </div>
+              <div
+                className="flex items-center gap-3 rounded-xl border px-3 py-2 shadow-sm"
+                style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(180deg,#eff6ff_0%,#e0f2fe_100%)] text-[#1d4ed8]">
+                  <Shield size={16} />
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-semibold">{usuario.nombre}</p>
+                  <p className="text-[11px] text-[var(--muted)]">{usuario.rol}</p>
+                </div>
+                <button
+                  onClick={logout}
+                  className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#ef4444] transition hover:bg-[#fef2f2]"
+                  title="Cerrar sesión"
+                >
+                  <LogOut size={14} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -204,11 +216,12 @@ function AppContent() {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3.5 py-2 text-sm font-medium transition"
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3.5 py-2 text-sm font-medium transition-all hover:-translate-y-px hover:shadow-sm"
                 style={{
-                  background: active ? 'var(--surface-2)' : 'transparent',
-                  borderColor: active ? '#3b82f6' : 'var(--border)',
-                  color: active ? '#fff' : 'var(--muted)',
+                  background: active ? 'linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%)' : 'var(--surface)',
+                  borderColor: active ? '#1d4ed8' : 'var(--border)',
+                  color: active ? '#fff' : 'var(--text)',
+                  boxShadow: active ? '0 6px 18px -12px rgba(37, 99, 235, 0.9)' : 'none',
                 }}
               >
                 {t.icon}
