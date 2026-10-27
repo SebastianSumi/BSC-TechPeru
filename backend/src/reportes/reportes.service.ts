@@ -91,6 +91,7 @@ export class ReportesService {
     const objetivos = await this.prisma.objetivo.findMany({
       where: {
         empresaId,
+        activo: true,
         ...(filtros.perspectivaId
           ? { perspectivaId: filtros.perspectivaId }
           : {}),
