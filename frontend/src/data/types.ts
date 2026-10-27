@@ -1,6 +1,20 @@
 export type PerspectivaId = 'financiera' | 'clientes' | 'procesos' | 'aprendizaje'
 
 export type Estado = 'logrado' | 'riesgo' | 'critico'
+export type EstadoCumplimiento = 'LOGRADO' | 'EN_RIESGO' | 'CRITICO'
+export type EstadoTarea = 'PENDIENTE' | 'EN_PROCESO' | 'COMPLETADA' | 'CANCELADA'
+export type EstadoValidacion = 'PENDIENTE' | 'VALIDADO' | 'RECHAZADO'
+export type TipoEvidencia = 'TEXTO' | 'ARCHIVO' | 'ENLACE'
+export type UnidadMedida =
+  | 'PORCENTAJE'
+  | 'SOLES'
+  | 'PUNTOS'
+  | 'DIAS'
+  | 'SEMANAS'
+  | 'HORAS'
+  | 'NUMERO_ORDEN'
+export type Agregacion = 'ULTIMO' | 'SUMA' | 'PROMEDIO' | 'ACUMULADO'
+export type AgregacionObjetivo = 'PROMEDIO' | 'PONDERADO' | 'MINIMO'
 
 export type RolNombre = 'ADMIN' | 'GERENTE' | 'ANALISTA' | 'RESPONSABLE'
 
@@ -15,11 +29,15 @@ export type EstadoVersion = 'BORRADOR' | 'VIGENTE' | 'ARCHIVADA'
 
 export interface Perspectiva {
   id: PerspectivaId
+  codigo?: string
   nombre: string
+  descripcion?: string
   icono: string
   color: string
   ponderacion?: number
   orden?: number
+  activo?: boolean
+  empresaId?: string | null
 }
 
 export interface Objetivo {
@@ -29,21 +47,25 @@ export interface Objetivo {
   descripcion?: string
   perspectivaId: string
   perspectiva?: Perspectiva
+  responsableId?: string | null
+  responsable?: Usuario | null
   ponderacion?: number
   activo?: boolean
   orden?: number
   indice?: number
-  _count?: { kpis: number }
+  _count?: { kpis: number; tareas?: number }
 }
 
 export interface Kpi {
   id: string
-  perspectivaId: PerspectivaId
+  codigo?: string | null
+  perspectivaId: string
   objetivoId?: string
   objetivoRef?: Objetivo
   objetivo: string
   nombre: string
   unidad: string
+  unidadMedida?: UnidadMedida | null
   meta: number
   real: number
   inverso: boolean
@@ -52,16 +74,25 @@ export interface Kpi {
   formula?: string
   fuenteDatos?: string
   responsableValidacion?: string
+  responsableId?: string | null
+  responsable?: Usuario | null
   umbralCumplido?: number
   umbralAlerta?: number
   rangoMin?: number | null
   rangoMax?: number | null
+  decimales?: number | null
+  agregacionPeriodos?: Agregacion
   accion: string
   orden?: number
   activo?: boolean
   ponderacion?: number
   cumplimiento?: number
+  cumplimientoBruto?: number
+  porcentaje?: string
   estado?: Estado
+  estadoKey?: Estado
+  formulaCalculo?: string
+  valido?: boolean
 }
 
 export interface KpiEvaluado extends Kpi {
@@ -176,12 +207,22 @@ export interface Desviacion {
 
 export interface Evidencia {
   id: string
+  empresaId?: string
   medicionId?: string
   kpiId?: string
+  kpi?: { id: string; nombre: string } | null
   desviacionId?: string
-  tipo: string
+  tareaId?: string | null
+  tarea?: { id: string; titulo: string } | null
+  resultadoTareaId?: string | null
+  resultadoTarea?: { id: string; descripcion: string } | null
+  tipo: TipoEvidencia | string
   titulo: string
   url?: string
+  contenido?: string | null
+  nombreArchivo?: string | null
+  mimeType?: string | null
+  tamano?: number | null
   descripcion?: string
   subidoPorId?: string
   subidoPor?: Usuario
@@ -243,9 +284,16 @@ export interface Auditoria {
 export interface Config {
   id: string
   empresa: string
+  empresaId?: string | null
   anioBase: number
   umbralCumplido: number
   umbralAlerta: number
+  decimalesReporte: number
+  formatoPorcentaje: 'DECIMAL' | 'ENTERO' | 'AUTO'
+  limitarPorcentaje: boolean
+  agregacionObjetivo: AgregacionObjetivo
+  agregacionPeriodos: Agregacion
+  agregacionResultados: 'NINGUNA' | Agregacion
   notificarCriticos: boolean
   requiereAprobacion: boolean
   requiereEvidencia: boolean
@@ -313,4 +361,160 @@ export interface Empresa {
   descripcion: string
   activo: boolean
   _count?: { objetivos: number; kpis: number; periodos: number }
+}
+
+export interface Recomendacion {
+  id: string
+  contenido: string
+  autorId: string
+  autor?: Usuario
+  objetivoId?: string | null
+  objetivo?: { id: string; codigo: string; nombre: string } | null
+  kpiId?: string | null
+  kpi?: { id: string; nombre: string } | null
+  fijada: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ResultadoTarea {
+  id: string
+  tareaId: string
+  descripcion: string
+  valor?: number | string | null
+  autorId: string
+  autor?: Usuario
+  fecha: string
+  estadoValidacion: EstadoValidacion
+  validadoPorId?: string | null
+  validadoPor?: Usuario | null
+  validadoEn?: string | null
+  aplicadoKpi: boolean
+  evidencias?: Evidencia[]
+  createdAt: string
+}
+
+export interface Tarea {
+  id: string
+  titulo: string
+  descripcion?: string
+  objetivoId: string
+  objetivo?: Objetivo
+  kpiId?: string | null
+  kpi?: Pick<Kpi, 'id' | 'codigo' | 'nombre' | 'unidad' | 'unidadMedida'> | null
+  responsableId?: string | null
+  responsable?: Usuario | null
+  creadorId: string
+  creador?: Usuario
+  fechaInicio: string
+  fechaFin?: string | null
+  estado: EstadoTarea
+  avance: number | string
+  resultados?: ResultadoTarea[]
+  evidencias?: Evidencia[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReporteObjetivoKpi {
+  id: string
+  codigo: string | null
+  nombre: string
+  perspectivaId: string
+  perspectivaNombre: string
+  responsableId: string | null
+  responsableNombre: string | null
+  meta: number
+  real: number
+  unidad: string
+  unidadMedida: string | null
+  ponderacion: number
+  cumplimiento: number
+  estado: EstadoCumplimiento
+  estadoKey: Estado
+  porcentaje: string
+  recomendacionFijada: string | null
+  historial?: HistorialKpi[]
+}
+
+export interface HistorialKpi {
+  medicionId: string
+  periodoId: string
+  periodo: string
+  anio: number
+  trimestre: number
+  meta: number
+  real: number
+  cumplimiento: number
+  estado: EstadoCumplimiento
+  estadoKey: Estado
+  porcentaje: string
+}
+
+export interface ReporteObjetivo {
+  id: string
+  codigo: string
+  nombre: string
+  descripcion: string
+  perspectivaId: string
+  perspectivaNombre: string
+  perspectivaColor: string
+  responsableId: string | null
+  responsableNombre: string | null
+  ponderacion: number
+  cumplimiento: number
+  estado: EstadoCumplimiento
+  estadoKey: Estado
+  totalKpis: number
+  logrado: number
+  riesgo: number
+  critico: number
+  recomendacionFijada: string | null
+  tareas: {
+    total: number
+    pendientes: number
+    enProceso: number
+    completadas: number
+  }
+  kpis: ReporteObjetivoKpi[]
+  evidencias?: Evidencia[]
+  versiones?: PlanVersion[]
+}
+
+export interface ReporteObjetivos {
+  generadoEn: string
+  filtros: {
+    empresaId: string
+    perspectivaId?: string
+    responsableId?: string
+    periodoId?: string
+    estado?: string
+    usuarioId?: string
+  }
+  reglas: Config
+  resumen: {
+    totalObjetivos: number
+    totalKpis: number
+    promedioObjetivos: number
+    logrados: number
+    enRiesgo: number
+    criticos: number
+  }
+  objetivos: ReporteObjetivo[]
+}
+
+export interface ReporteObjetivoDetalle extends ReporteObjetivo {
+  tareasDetalle: Array<{
+    id: string
+    titulo: string
+    descripcion: string
+    estado: EstadoTarea
+    avance: number
+    fechaInicio: string
+    fechaFin: string | null
+    responsable: Usuario | null
+    totalResultados: number
+    resultadosValidados: number
+    totalEvidencias: number
+  }>
 }

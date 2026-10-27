@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
 
 import { api } from '../lib/api'
-import type { Kpi, Periodo } from '../data/types'
-import { PERSPECTIVAS } from '../data/kpis'
+import type { Kpi, Periodo, Perspectiva } from '../data/types'
 import { EstadoBadge } from './EstadoBadge'
 
 export function DiccionarioPanel({ periodos }: { periodos: Periodo[] }) {
   const [kpis, setKpis] = useState<Kpi[]>([])
+  const [perspectivas, setPerspectivas] = useState<Perspectiva[]>([])
   const [periodoId, setPeriodoId] = useState('')
   const [perspectivaId, setPerspectivaId] = useState('')
   const [cargando, setCargando] = useState(true)
+
+  useEffect(() => {
+    api.listarPerspectivas().then(setPerspectivas).catch(() => {})
+  }, [])
 
   const cargar = () => {
     setCargando(true)
@@ -36,7 +40,7 @@ export function DiccionarioPanel({ periodos }: { periodos: Periodo[] }) {
             style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
           >
             <option value="">Todas las perspectivas</option>
-            {PERSPECTIVAS.map((p) => (
+            {perspectivas.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nombre}
               </option>
@@ -78,21 +82,25 @@ export function DiccionarioPanel({ periodos }: { periodos: Periodo[] }) {
           <tbody>
             {kpis.map((k) => (
               <tr key={k.id} className="border-t" style={{ borderColor: 'var(--border)' }}>
-                <td className="p-2 font-semibold">{k.id}</td>
+                <td className="p-2 font-semibold">{k.codigo ?? k.id}</td>
                 <td className="p-2">{k.nombre}</td>
-                <td className="p-2 text-[var(--muted)]">{k.objetivo}</td>
+                <td className="p-2 text-[var(--muted)]">
+                  {k.objetivoRef?.nombre ?? k.objetivo}
+                </td>
                 <td className="p-2 text-[var(--muted)]">{k.formula}</td>
-                <td className="p-2">{k.unidad}</td>
+                <td className="p-2">{k.unidadMedida ?? k.unidad}</td>
                 <td className="p-2">{k.frecuencia}</td>
                 <td className="p-2 text-[var(--muted)]">{k.fuenteDatos}</td>
-                <td className="p-2 text-[var(--muted)]">{k.responsableValidacion}</td>
+                <td className="p-2 text-[var(--muted)]">
+                  {k.responsable?.nombre ?? k.responsableValidacion}
+                </td>
                 <td className="p-2 text-right tabular-nums">{k.meta}</td>
                 <td className="p-2 text-right tabular-nums">{k.real}</td>
                 <td className="p-2 text-center text-[var(--muted)]">
                   ≥{k.umbralCumplido ?? 90} / ≥{k.umbralAlerta ?? 75}
                 </td>
                 <td className="p-2 text-center">
-                  <EstadoBadge estado={(k.estado as never) ?? 'riesgo'} pct={k.cumplimiento ?? 0} />
+                  <EstadoBadge estado={k.estadoKey ?? k.estado ?? 'critico'} pct={k.cumplimiento ?? 0} />
                 </td>
               </tr>
             ))}

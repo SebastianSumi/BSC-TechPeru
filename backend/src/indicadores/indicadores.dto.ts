@@ -1,33 +1,60 @@
 import {
   IsBoolean,
   IsIn,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
+  Max,
+  Min,
 } from 'class-validator';
 
 const TIPOS = ['MAYOR_MEJOR', 'MENOR_MEJOR', 'RANGO'] as const;
 const FRECUENCIAS = ['MENSUAL', 'TRIMESTRAL', 'SEMESTRAL', 'ANUAL'] as const;
+export const UNIDADES_MEDIDA = [
+  'PORCENTAJE',
+  'SOLES',
+  'PUNTOS',
+  'DIAS',
+  'SEMANAS',
+  'HORAS',
+  'NUMERO_ORDEN',
+] as const;
+export const AGREGACIONES_PERIODO_KPI = [
+  'ULTIMO',
+  'SUMA',
+  'PROMEDIO',
+  'ACUMULADO',
+] as const;
 
 export class CreateIndicadorDto {
   @IsString()
   id!: string;
 
+  @IsOptional()
+  @IsString()
+  codigo?: string;
+
   @IsString()
   perspectivaId!: string;
 
+  @IsString()
+  objetivoId!: string;
+
   @IsOptional()
   @IsString()
-  objetivoId?: string;
-
-  @IsString()
-  objetivo!: string;
+  objetivo?: string;
 
   @IsString()
   nombre!: string;
 
+  @IsOptional()
   @IsString()
-  unidad!: string;
+  unidad?: string;
+
+  @IsOptional()
+  @IsIn(UNIDADES_MEDIDA)
+  unidadMedida?: string;
 
   @IsNumber()
   meta!: number;
@@ -60,6 +87,10 @@ export class CreateIndicadorDto {
   responsableValidacion?: string;
 
   @IsOptional()
+  @IsString()
+  responsableId?: string;
+
+  @IsOptional()
   @IsNumber()
   umbralCumplido?: number;
 
@@ -76,6 +107,16 @@ export class CreateIndicadorDto {
   rangoMax?: number;
 
   @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(6)
+  decimales?: number;
+
+  @IsOptional()
+  @IsIn(AGREGACIONES_PERIODO_KPI)
+  agregacionPeriodos?: string;
+
+  @IsOptional()
   @IsString()
   accion?: string;
 
@@ -89,6 +130,10 @@ export class CreateIndicadorDto {
 }
 
 export class UpdateIndicadorDto {
+  @IsOptional()
+  @IsString()
+  codigo?: string;
+
   @IsOptional()
   @IsString()
   perspectivaId?: string;
@@ -108,6 +153,10 @@ export class UpdateIndicadorDto {
   @IsOptional()
   @IsString()
   unidad?: string;
+
+  @IsOptional()
+  @IsIn(UNIDADES_MEDIDA)
+  unidadMedida?: string;
 
   @IsOptional()
   @IsNumber()
@@ -142,6 +191,10 @@ export class UpdateIndicadorDto {
   responsableValidacion?: string;
 
   @IsOptional()
+  @IsString()
+  responsableId?: string;
+
+  @IsOptional()
   @IsNumber()
   umbralCumplido?: number;
 
@@ -156,6 +209,16 @@ export class UpdateIndicadorDto {
   @IsOptional()
   @IsNumber()
   rangoMax?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(6)
+  decimales?: number;
+
+  @IsOptional()
+  @IsIn(AGREGACIONES_PERIODO_KPI)
+  agregacionPeriodos?: string;
 
   @IsOptional()
   @IsString()

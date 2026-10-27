@@ -63,7 +63,16 @@ export function useBsc(periodoId?: string | null, empresaId?: string) {
   const setReal = useCallback(
     (id: string, real: number) => {
       setKpis((prev) => prev.map((k) => (k.id === id ? { ...k, real } : k)))
-      if (source === 'api') api.setReal(id, real).catch(() => {})
+      if (source === 'api') {
+        api
+          .setReal(id, real)
+          .then((actualizado) =>
+            setKpis((prev) =>
+              prev.map((k) => (k.id === id ? { ...k, ...actualizado } : k)),
+            ),
+          )
+          .catch(() => {})
+      }
     },
     [source],
   )

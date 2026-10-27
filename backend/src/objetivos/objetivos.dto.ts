@@ -1,8 +1,9 @@
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateObjetivoDto {
+  @IsOptional()
   @IsString()
-  codigo!: string;
+  codigo?: string;
 
   @IsString()
   nombre!: string;
@@ -13,6 +14,10 @@ export class CreateObjetivoDto {
 
   @IsString()
   perspectivaId!: string;
+
+  @IsOptional()
+  @IsString()
+  responsableId?: string;
 
   @IsOptional()
   @IsNumber()
@@ -35,6 +40,10 @@ export class UpdateObjetivoDto {
   @IsOptional()
   @IsString()
   perspectivaId?: string;
+
+  @IsOptional()
+  @IsString()
+  responsableId?: string;
 
   @IsOptional()
   @IsNumber()

@@ -1,48 +1,65 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
-  calcularCumplimiento,
-  calcularIndice,
-  clasificarEstado,
-  contarEstados,
-} from './bsc.logic.js';
+  CumplimientoService,
+  type KpiEvaluable,
+} from '../cumplimiento/cumplimiento.service.js';
 
-interface KpiBase {
-  id: string;
-  perspectivaId: string;
-  objetivo: string;
-  nombre: string;
-  unidad: string;
-  meta: number;
-  real: number;
-  inverso: boolean;
-  accion: string;
-}
-
-interface MedicionLike {
-  meta: number;
-  real: number;
-}
+type EstadoKey = 'logrado' | 'riesgo' | 'critico';
 
 @Injectable()
 export class BscService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cumplimiento: CumplimientoService,
+  ) {}
 
-  private evaluar(kpi: KpiBase, medicion?: MedicionLike) {
-    const meta = medicion?.meta ?? kpi.meta;
-    const real = medicion?.real ?? kpi.real;
-    const cumplimiento = calcularCumplimiento(meta, real, kpi.inverso);
+  private evaluarKpi<T extends object>(
+    kpi: T,
+    reglas: Awaited<ReturnType<CumplimientoService['reglas']>>,
+    medicion?: { meta: unknown; real: unknown } | null,
+  ) {
+    const evaluado = this.cumplimiento.evaluar(
+      kpi as KpiEvaluable,
+      reglas,
+      medicion ?? null,
+    );
     return {
       ...kpi,
-      meta,
-      real,
-      cumplimiento,
-      estado: clasificarEstado(cumplimiento),
+      meta: evaluado.meta,
+      real: evaluado.real,
+      cumplimiento: evaluado.mostrado,
+      cumplimientoBruto: evaluado.bruto,
+      porcentaje: evaluado.porcentaje,
+      estado: evaluado.estadoKey,
+      estadoKey: evaluado.estadoKey,
+      formulaCalculo: evaluado.formula,
+      valido: evaluado.valido,
     };
   }
 
-  async getPerspectivas() {
-    return this.prisma.perspectiva.findMany({ orderBy: { orden: 'asc' } });
+  private contar(evaluados: { estado: EstadoKey }[]) {
+    return {
+      logrado: evaluados.filter((k) => k.estado === 'logrado').length,
+      riesgo: evaluados.filter((k) => k.estado === 'riesgo').length,
+      critico: evaluados.filter((k) => k.estado === 'critico').length,
+    };
+  }
+
+  private indice(
+    evaluados: { cumplimiento: number; ponderacion?: number | null }[],
+    regla: string,
+  ) {
+    return this.cumplimiento.agregarObjetivo(evaluados, regla);
+  }
+
+  async getPerspectivas(empresaId?: string) {
+    return this.prisma.perspectiva.findMany({
+      where: empresaId
+        ? { OR: [{ empresaId }, { empresaId: null }] }
+        : undefined,
+      orderBy: { orden: 'asc' },
+    });
   }
 
   async getKpis(
@@ -50,22 +67,24 @@ export class BscService {
     periodoId?: string,
     empresaId?: string,
   ) {
-    const kpis = await this.prisma.kpi.findMany({
-      where: {
-        ...(perspectivaId ? { perspectivaId } : {}),
-        ...(empresaId ? { empresaId } : {}),
-      },
-      orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }],
-      include: periodoId
-        ? { mediciones: { where: { periodoId } } }
-        : undefined,
-    });
+    const [kpis, reglas] = await Promise.all([
+      this.prisma.kpi.findMany({
+        where: {
+          ...(perspectivaId ? { perspectivaId } : {}),
+          ...(empresaId ? { empresaId } : {}),
+        },
+        orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }],
+        include: periodoId
+          ? { mediciones: { where: { periodoId } } }
+          : undefined,
+      }),
+      this.cumplimiento.reglas(empresaId),
+    ]);
     return kpis.map((k) => {
-      const { mediciones, ...base } = k as KpiBase & {
-        mediciones?: MedicionLike[];
-        orden?: number;
+      const { mediciones, ...base } = k as typeof k & {
+        mediciones?: { meta: unknown; real: unknown }[];
       };
-      return this.evaluar(base, mediciones?.[0]);
+      return this.evaluarKpi(base, reglas, mediciones?.[0]);
     });
   }
 
@@ -75,32 +94,45 @@ export class BscService {
       include: periodoId ? { mediciones: { where: { periodoId } } } : undefined,
     });
     if (!kpi) throw new NotFoundException(`KPI ${id} no encontrado`);
-    const { mediciones, ...base } = kpi as KpiBase & {
-      mediciones?: MedicionLike[];
+    const { mediciones, ...base } = kpi as typeof kpi & {
+      mediciones?: { meta: unknown; real: unknown }[];
     };
-    return this.evaluar(base, mediciones?.[0]);
+    const reglas = await this.cumplimiento.reglas(kpi.empresaId);
+    return this.evaluarKpi(base, reglas, mediciones?.[0]);
   }
 
   async getResumen(periodoId?: string, empresaId?: string) {
-    const evaluados = await this.getKpis(undefined, periodoId, empresaId);
-    const estados = contarEstados(evaluados);
-    const perspectivas = await this.prisma.perspectiva.findMany({
-      orderBy: { orden: 'asc' },
-    });
+    const [evaluados, perspectivas, reglas] = await Promise.all([
+      this.getKpis(undefined, periodoId, empresaId),
+      this.getPerspectivas(empresaId),
+      this.cumplimiento.reglas(empresaId),
+    ]);
+    const estados = this.contar(evaluados as { estado: EstadoKey }[]);
 
     const porPerspectiva = perspectivas.map((p) => {
       const de = evaluados.filter((k) => k.perspectivaId === p.id);
-      const e = contarEstados(de);
       return {
         ...p,
-        indiceGlobal: calcularIndice(de),
-        ...e,
+        indiceGlobal: this.indice(
+          de.map((k) => ({
+            cumplimiento: k.cumplimiento,
+            ponderacion: k.ponderacion,
+          })),
+          reglas.agregacionObjetivo,
+        ),
+        ...this.contar(de as { estado: EstadoKey }[]),
         total: de.length,
       };
     });
 
     return {
-      indiceGlobal: calcularIndice(evaluados),
+      indiceGlobal: this.indice(
+        evaluados.map((k) => ({
+          cumplimiento: k.cumplimiento,
+          ponderacion: k.ponderacion,
+        })),
+        reglas.agregacionObjetivo,
+      ),
       ...estados,
       total: evaluados.length,
       porPerspectiva,
@@ -115,14 +147,17 @@ export class BscService {
     });
   }
 
-  async upsertMedicion(kpiId: string, dto: {
-    periodoId: string;
-    meta: number;
-    real: number;
-    nota?: string;
-  }) {
+  async upsertMedicion(
+    kpiId: string,
+    dto: {
+      periodoId: string;
+      meta: number;
+      real: number;
+      nota?: string;
+    },
+  ) {
     await this.getKpi(kpiId);
-    const medicion = await this.prisma.medicion.upsert({
+    return this.prisma.medicion.upsert({
       where: { kpiId_periodoId: { kpiId, periodoId: dto.periodoId } },
       update: { meta: dto.meta, real: dto.real, nota: dto.nota },
       create: {
@@ -133,7 +168,6 @@ export class BscService {
         nota: dto.nota,
       },
     });
-    return medicion;
   }
 
   async setReal(id: string, real: number) {
@@ -142,7 +176,8 @@ export class BscService {
       where: { id },
       data: { real },
     });
-    return this.evaluar(kpi as KpiBase);
+    const reglas = await this.cumplimiento.reglas(kpi.empresaId);
+    return this.evaluarKpi(kpi, reglas);
   }
 
   async reporte(params: {
@@ -159,28 +194,15 @@ export class BscService {
       kpiIds = asigs.map((a) => a.kpiId);
     }
 
-    const kpis = await this.prisma.kpi.findMany({
-      where: {
-        ...(params.perspectivaId ? { perspectivaId: params.perspectivaId } : {}),
-        ...(params.empresaId ? { empresaId: params.empresaId } : {}),
-        ...(kpiIds ? { id: { in: kpiIds } } : {}),
-      },
-      orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }],
-      include: params.periodoId
-        ? { mediciones: { where: { periodoId: params.periodoId } } }
-        : undefined,
-    });
+    const [todos, perspectivas, reglas] = await Promise.all([
+      this.getKpis(params.perspectivaId, params.periodoId, params.empresaId),
+      this.getPerspectivas(params.empresaId),
+      this.cumplimiento.reglas(params.empresaId),
+    ]);
+    const evaluados = kpiIds
+      ? todos.filter((k) => kpiIds?.includes(k.id))
+      : todos;
 
-    const evaluados = kpis.map((k) => {
-      const { mediciones, ...base } = k as KpiBase & {
-        mediciones?: MedicionLike[];
-      };
-      return this.evaluar(base, mediciones?.[0]);
-    });
-
-    const perspectivas = await this.prisma.perspectiva.findMany({
-      orderBy: { orden: 'asc' },
-    });
     const porPerspectiva = perspectivas
       .map((p) => {
         const de = evaluados.filter((k) => k.perspectivaId === p.id);
@@ -190,8 +212,14 @@ export class BscService {
           nombre: p.nombre,
           icono: p.icono,
           color: p.color,
-          indiceGlobal: calcularIndice(de),
-          ...contarEstados(de),
+          indiceGlobal: this.indice(
+            de.map((k) => ({
+              cumplimiento: k.cumplimiento,
+              ponderacion: k.ponderacion,
+            })),
+            reglas.agregacionObjetivo,
+          ),
+          ...this.contar(de as { estado: EstadoKey }[]),
           total: de.length,
         };
       })
@@ -201,8 +229,14 @@ export class BscService {
       generadoEn: new Date().toISOString(),
       filtros: params,
       resumen: {
-        indiceGlobal: calcularIndice(evaluados),
-        ...contarEstados(evaluados),
+        indiceGlobal: this.indice(
+          evaluados.map((k) => ({
+            cumplimiento: k.cumplimiento,
+            ponderacion: k.ponderacion,
+          })),
+          reglas.agregacionObjetivo,
+        ),
+        ...this.contar(evaluados as { estado: EstadoKey }[]),
         total: evaluados.length,
       },
       porPerspectiva,

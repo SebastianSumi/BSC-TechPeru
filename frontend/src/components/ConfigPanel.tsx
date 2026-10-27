@@ -71,14 +71,145 @@ export function ConfigPanel() {
               style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
             />
           </label>
-          <div className="flex items-center gap-2 pt-4">
+          <label className="text-xs">
+            <span className="text-[var(--muted)]">Decimales en reportes</span>
             <input
-              type="checkbox"
-              checked={config.notificarCriticos}
-              onChange={(e) => setConfig({ ...config, notificarCriticos: e.target.checked })}
+              type="number"
+              min={0}
+              max={6}
+              value={config.decimalesReporte ?? 2}
+              onChange={(e) =>
+                setConfig({ ...config, decimalesReporte: Number(e.target.value) })
+              }
               disabled={!esAdmin}
+              className="mt-1 w-full rounded-lg border px-2 py-1.5"
+              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
             />
-            <span className="text-xs">Notificar KPIs críticos</span>
+          </label>
+          <label className="text-xs">
+            <span className="text-[var(--muted)]">Formato de porcentaje</span>
+            <select
+              value={config.formatoPorcentaje ?? 'DECIMAL'}
+              onChange={(e) =>
+                setConfig({
+                  ...config,
+                  formatoPorcentaje: e.target.value as Config['formatoPorcentaje'],
+                })
+              }
+              disabled={!esAdmin}
+              className="mt-1 w-full rounded-lg border px-2 py-1.5"
+              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
+            >
+              <option value="DECIMAL">Decimal</option>
+              <option value="ENTERO">Entero</option>
+              <option value="AUTO">Automático</option>
+            </select>
+          </label>
+          <label className="text-xs">
+            <span className="text-[var(--muted)]">Agregación de objetivos</span>
+            <select
+              value={config.agregacionObjetivo ?? 'PROMEDIO'}
+              onChange={(e) =>
+                setConfig({
+                  ...config,
+                  agregacionObjetivo: e.target.value as Config['agregacionObjetivo'],
+                })
+              }
+              disabled={!esAdmin}
+              className="mt-1 w-full rounded-lg border px-2 py-1.5"
+              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
+            >
+              <option value="PROMEDIO">Promedio</option>
+              <option value="PONDERADO">Ponderado</option>
+              <option value="MINIMO">Mínimo</option>
+            </select>
+          </label>
+          <label className="text-xs">
+            <span className="text-[var(--muted)]">Agregación entre períodos</span>
+            <select
+              value={config.agregacionPeriodos ?? 'ULTIMO'}
+              onChange={(e) =>
+                setConfig({
+                  ...config,
+                  agregacionPeriodos: e.target.value as Config['agregacionPeriodos'],
+                })
+              }
+              disabled={!esAdmin}
+              className="mt-1 w-full rounded-lg border px-2 py-1.5"
+              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
+            >
+              <option value="ULTIMO">Último</option>
+              <option value="SUMA">Suma</option>
+              <option value="PROMEDIO">Promedio</option>
+              <option value="ACUMULADO">Acumulado</option>
+            </select>
+          </label>
+          <label className="text-xs">
+            <span className="text-[var(--muted)]">Agregación de resultados de tareas</span>
+            <select
+              value={config.agregacionResultados ?? 'NINGUNA'}
+              onChange={(e) =>
+                setConfig({
+                  ...config,
+                  agregacionResultados: e.target
+                    .value as Config['agregacionResultados'],
+                })
+              }
+              disabled={!esAdmin}
+              className="mt-1 w-full rounded-lg border px-2 py-1.5"
+              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
+            >
+              <option value="NINGUNA">No aplicar</option>
+              <option value="SUMA">Suma</option>
+              <option value="ULTIMO">Último</option>
+              <option value="PROMEDIO">Promedio</option>
+            </select>
+          </label>
+          <div className="flex flex-col gap-2 pt-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={config.limitarPorcentaje ?? false}
+                onChange={(e) =>
+                  setConfig({ ...config, limitarPorcentaje: e.target.checked })
+                }
+                disabled={!esAdmin}
+              />
+              <span className="text-xs">Limitar porcentaje a 100%</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={config.notificarCriticos}
+                onChange={(e) =>
+                  setConfig({ ...config, notificarCriticos: e.target.checked })
+                }
+                disabled={!esAdmin}
+              />
+              <span className="text-xs">Notificar KPIs críticos</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={config.requiereEvidencia ?? false}
+                onChange={(e) =>
+                  setConfig({ ...config, requiereEvidencia: e.target.checked })
+                }
+                disabled={!esAdmin}
+              />
+              <span className="text-xs">Requerir evidencia</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={config.requiereAprobacion ?? false}
+                onChange={(e) =>
+                  setConfig({ ...config, requiereAprobacion: e.target.checked })
+                }
+                disabled={!esAdmin}
+              />
+              <span className="text-xs">Requerir aprobación</span>
+            </label>
           </div>
         </div>
       )}

@@ -23,6 +23,12 @@ import { MapaModule } from './mapa/mapa.module.js';
 import { ComparacionModule } from './comparacion/comparacion.module.js';
 import { ImportacionModule } from './importacion/importacion.module.js';
 import { AprobacionesModule } from './aprobaciones/aprobaciones.module.js';
+import { CumplimientoModule } from './cumplimiento/cumplimiento.module.js';
+import { ComunModule } from './comun/comun.module.js';
+import { CatalogosModule } from './catalogos/catalogos.module.js';
+import { RecomendacionesModule } from './recomendaciones/recomendaciones.module.js';
+import { TareasModule } from './tareas/tareas.module.js';
+import { ReportesModule } from './reportes/reportes.module.js';
 import { JwtAuthGuard, RolesGuard } from './auth/guards.js';
 
 @Module({
@@ -48,6 +54,12 @@ import { JwtAuthGuard, RolesGuard } from './auth/guards.js';
     ComparacionModule,
     ImportacionModule,
     AprobacionesModule,
+    CumplimientoModule,
+    ComunModule,
+    CatalogosModule,
+    RecomendacionesModule,
+    TareasModule,
+    ReportesModule,
   ],
   controllers: [AppController],
   providers: [

@@ -34,6 +34,14 @@ export class ObjetivosController {
     );
   }
 
+  @Get('agrupados')
+  agrupados(
+    @Query('empresa') empresaId?: string,
+    @Query('incluirInactivos') incluirInactivos?: string,
+  ) {
+    return this.objetivos.agrupados(empresaId, incluirInactivos === 'true');
+  }
+
   @Get(':id')
   obtener(@Param('id') id: string) {
     return this.objetivos.obtener(id);
@@ -50,18 +58,21 @@ export class ObjetivosController {
   }
 
   @Patch(':id')
-  @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
+  @Roles(RolNombre.ADMIN, RolNombre.GERENTE, RolNombre.RESPONSABLE)
   actualizar(
     @Param('id') id: string,
     @Body() dto: UpdateObjetivoDto,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: { id: string; rol: string },
   ) {
-    return this.objetivos.actualizar(id, dto, user.id);
+    return this.objetivos.actualizar(id, dto, user);
   }
 
   @Delete(':id')
-  @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
-  desactivar(@Param('id') id: string, @CurrentUser() user: { id: string }) {
-    return this.objetivos.desactivar(id, user.id);
+  @Roles(RolNombre.ADMIN, RolNombre.GERENTE, RolNombre.RESPONSABLE)
+  desactivar(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string; rol: string },
+  ) {
+    return this.objetivos.desactivar(id, user);
   }
 }

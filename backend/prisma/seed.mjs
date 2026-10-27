@@ -97,11 +97,13 @@ async function main() {
   for (const k of KPIS) {
     const prefijo = k.objetivo.split(':')[0].trim();
     const objetivoRef = objetivoPorCodigo[prefijo];
+    if (!objetivoRef) throw new Error(`Objetivo no encontrado para KPI ${k.id}`);
     const data = {
       id: k.id,
+      codigo: k.id,
       empresaId: 'techperu',
       perspectivaId: k.perspectivaId,
-      objetivoId: objetivoRef?.id ?? null,
+      objetivoId: objetivoRef.id,
       objetivo: k.objetivo,
       nombre: k.nombre,
       unidad: k.unidad,
@@ -152,6 +154,16 @@ async function main() {
     usuarioPorEmail[u.email] = usuario;
   }
 
+  const responsable = usuarioPorEmail['responsable@techperu.pe'];
+  await prisma.objetivo.updateMany({
+    where: { empresaId: 'techperu' },
+    data: { responsableId: responsable.id },
+  });
+  await prisma.kpi.updateMany({
+    where: { empresaId: 'techperu' },
+    data: { responsableId: responsable.id },
+  });
+
   // Períodos
   const periodoPorNombre = {};
   for (const p of PERIODOS) {
@@ -194,10 +206,10 @@ async function main() {
         registradoPorId: analista.id,
       },
     });
-    historicos.forEach((per, idx) => {
+    for (const [idx, per] of historicos.entries()) {
       const factor = 0.85 + idx * 0.05; // Q1 85%, Q2 90%, Q3 95% del valor base aprox.
       const realHist = Math.round(k.real * factor * 100) / 100;
-      prisma.medicion.upsert({
+      await prisma.medicion.upsert({
         where: { kpiId_periodoId: { kpiId: k.id, periodoId: per.id } },
         update: { meta: k.meta, real: realHist, estadoAprobacion: 'APROBADA', registradoPorId: analista.id },
         create: {
@@ -209,11 +221,88 @@ async function main() {
           registradoPorId: analista.id,
         },
       });
+    }
+  }
+
+  const gerente = usuarioPorEmail['gerente@techperu.pe'];
+
+  // Recomendaciones, tareas, resultados y evidencias de ejemplo
+  const recExistente = await prisma.recomendacion.count();
+  if (recExistente === 0) {
+    await prisma.recomendacion.createMany({
+      data: [
+        {
+          contenido: 'Crear un equipo dedicado de Customer Success para reducir el churn.',
+          autorId: gerente.id,
+          kpiId: 'C2.3',
+          fijada: true,
+        },
+        {
+          contenido: 'Implementar programa de fidelización con seguimiento a 30/60/90 días.',
+          autorId: responsable.id,
+          objetivoId: objetivoPorCodigo['OBJ-C2'].id,
+          fijada: true,
+        },
+      ],
+    });
+  }
+
+  const tareaExistente = await prisma.tarea.count();
+  if (tareaExistente === 0) {
+    const tareaChurn = await prisma.tarea.create({
+      data: {
+        titulo: 'Desplegar equipo de Customer Success',
+        descripcion: 'Conformar el equipo y definir protocolos de seguimiento post-venta.',
+        objetivoId: objetivoPorCodigo['OBJ-C2'].id,
+        kpiId: 'C2.3',
+        responsableId: responsable.id,
+        creadorId: gerente.id,
+        fechaInicio: new Date(Date.UTC(2025, 9, 1)),
+        fechaFin: new Date(Date.UTC(2025, 11, 31)),
+        estado: 'EN_PROCESO',
+        avance: 40,
+      },
+    });
+    const resultado = await prisma.resultadoTarea.create({
+      data: {
+        tareaId: tareaChurn.id,
+        descripcion: 'Protocolo de seguimiento implementado y equipo capacitado.',
+        valor: 6.8,
+        autorId: responsable.id,
+        estadoValidacion: 'PENDIENTE',
+      },
+    });
+    await prisma.evidencia.create({
+      data: {
+        empresaId: 'techperu',
+        kpiId: 'C2.3',
+        tareaId: tareaChurn.id,
+        resultadoTareaId: resultado.id,
+        tipo: 'ENLACE',
+        titulo: 'Acta de conformación del equipo de Customer Success',
+        url: 'https://intranet.techperu.pe/actas/customer-success',
+        descripcion: 'Evidencia del avance de la tarea de retención.',
+        subidoPorId: responsable.id,
+      },
+    });
+
+    await prisma.tarea.create({
+      data: {
+        titulo: 'Actualizar modelo de costos operativos',
+        descripcion: 'Revisar centros de costo y oportunidades de automatización.',
+        objetivoId: objetivoPorCodigo['OBJ-F3'].id,
+        kpiId: 'F3.1',
+        responsableId: responsable.id,
+        creadorId: gerente.id,
+        fechaInicio: new Date(Date.UTC(2025, 8, 1)),
+        fechaFin: new Date(Date.UTC(2025, 11, 15)),
+        estado: 'PENDIENTE',
+        avance: 10,
+      },
     });
   }
 
   // Iniciativas estratégicas
-  const gerente = usuarioPorEmail['gerente@techperu.pe'];
   const INICIATIVAS = [
     { codigo: 'INI-01', nombre: 'Programa de reducción de costos operativos', objetivo: 'OBJ-F3', responsable: resp.id, avance: 45, estado: 'EN_CURSO', presupuesto: 180000 },
     { codigo: 'INI-02', nombre: 'Campaña de re-engagement de clientes', objetivo: 'OBJ-C2', responsable: gerente.id, avance: 60, estado: 'EN_CURSO', presupuesto: 95000 },
@@ -359,11 +448,29 @@ async function main() {
       anioBase: 2025,
       umbralCumplido: 90,
       umbralAlerta: 75,
+      agregacionResultados: 'ULTIMO',
       notificarCriticos: true,
       requiereAprobacion: false,
       requiereEvidencia: false,
     },
   });
+
+  // Configuración por empresa
+  for (const empresa of EMPRESAS) {
+    await prisma.config.upsert({
+      where: { id: `config-${empresa.id}` },
+      update: { empresaId: empresa.id, empresa: empresa.nombre },
+      create: {
+        id: `config-${empresa.id}`,
+        empresaId: empresa.id,
+        empresa: empresa.nombre,
+        anioBase: empresa.id === 'techperu' ? 2025 : 2026,
+        umbralCumplido: 90,
+        umbralAlerta: 75,
+        agregacionResultados: 'ULTIMO',
+      },
+    });
+  }
 
   // Evidencia de ejemplo
   const evidExistente = await prisma.evidencia.count();
@@ -423,12 +530,14 @@ async function main() {
     const kpisEmpresa = [];
     for (const k of data.kpis) {
       const objetivoRef = objetivosEmpresa[k.objetivo];
+      if (!objetivoRef) throw new Error(`Objetivo no encontrado para KPI ${k.id}`);
       const kpiData = {
         id: k.id,
+        codigo: k.id,
         empresaId,
         perspectivaId: k.perspectivaId,
-        objetivoId: objetivoRef?.id ?? null,
-        objetivo: `${k.objetivo}: ${objetivoRef?.nombre ?? ''}`,
+        objetivoId: objetivoRef.id,
+        objetivo: `${k.objetivo}: ${objetivoRef.nombre}`,
         nombre: k.nombre,
         unidad: k.unidad,
         meta: k.meta,
@@ -469,10 +578,10 @@ async function main() {
           registradoPorId: analista.id,
         },
       });
-      FACTOR_HISTORICO.forEach((factor, idx) => {
+      for (const [idx, factor] of FACTOR_HISTORICO.entries()) {
         const periodo = periodoPorTrimestre[idx];
         const realHist = Math.round(k.real * factor * 100) / 100;
-        prisma.medicion.upsert({
+        await prisma.medicion.upsert({
           where: { kpiId_periodoId: { kpiId: k.id, periodoId: periodo.id } },
           update: { meta: k.meta, real: realHist, estadoAprobacion: 'APROBADA', registradoPorId: analista.id },
           create: {
@@ -484,7 +593,7 @@ async function main() {
             registradoPorId: analista.id,
           },
         });
-      });
+      }
     }
 
     // Relaciones causales Aprendizaje → Procesos → Clientes → Financiera

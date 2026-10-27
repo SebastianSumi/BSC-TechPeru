@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AuditoriaService } from '../auditoria/auditoria.service.js';
+import { CumplimientoService } from '../cumplimiento/cumplimiento.service.js';
 import { CreateRelacionDto } from './mapa.dto.js';
 
 @Injectable()
@@ -12,6 +13,7 @@ export class MapaService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditoria: AuditoriaService,
+    private readonly cumplimiento: CumplimientoService,
   ) {}
 
   /** Devuelve perspectivas, objetivos (con índice de cumplimiento) y relaciones causales. */
@@ -33,21 +35,22 @@ export class MapaService {
       }),
     ]);
 
-    const calcular = (meta: number, real: number, inverso: boolean) => {
-      if (real === 0) return 0;
-      const pct = inverso ? (meta / real) * 100 : (real / meta) * 100;
-      return Math.round(pct * 10) / 10;
-    };
-
+    const reglas = await this.cumplimiento.reglas(empresaId);
     const objetivoIndice: Record<string, number> = {};
     for (const obj of objetivos) {
       const delObj = kpis.filter((k) => k.objetivoId === obj.id);
-      const suma = delObj.reduce((acc, k) => {
-        const med = (k as { mediciones?: { meta: number; real: number }[] })
-          .mediciones?.[0];
-        return acc + calcular(med?.meta ?? k.meta, med?.real ?? k.real, k.inverso);
-      }, 0);
-      objetivoIndice[obj.id] = Math.round((suma / (delObj.length || 1)) * 10) / 10;
+      objetivoIndice[obj.id] = this.cumplimiento.agregarObjetivo(
+        delObj.map((k) => {
+          const med = (k as { mediciones?: { meta: unknown; real: unknown }[] })
+            .mediciones?.[0];
+          return {
+            cumplimiento: this.cumplimiento.evaluar(k, reglas, med ?? null)
+              .mostrado,
+            ponderacion: k.ponderacion,
+          };
+        }),
+        reglas.agregacionObjetivo,
+      );
     }
 
     return {

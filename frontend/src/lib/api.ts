@@ -15,11 +15,17 @@ import type {
   MapaEstrategico,
   Objetivo,
   Periodo,
+  Perspectiva,
   PlanVersion,
   RelacionCausal,
+  Recomendacion,
   Reporte,
+  ReporteObjetivoDetalle,
+  ReporteObjetivos,
   ResumenApi,
+  ResultadoTarea,
   RolNombre,
+  Tarea,
   Usuario,
 } from '../data/types'
 
@@ -51,6 +57,28 @@ export function getToken(): string | null {
 export function setToken(token: string | null) {
   if (token) localStorage.setItem(TOKEN_KEY, token)
   else localStorage.removeItem(TOKEN_KEY)
+}
+
+async function requestBlob(path: string, options: RequestInit = {}) {
+  const token = getToken()
+  const res = await fetch(`${API_URL}${conEmpresa(path)}`, {
+    ...options,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers ?? {}),
+    },
+  })
+  if (res.status === 401) setToken(null)
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`${options.method ?? 'GET'} ${path} -> ${res.status} ${body}`)
+  }
+  return {
+    blob: await res.blob(),
+    nombreArchivo:
+      res.headers.get('Content-Disposition')?.match(/filename="?([^";]+)"?/)?.[1] ??
+      'archivo',
+  }
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -128,6 +156,44 @@ export const api = {
   eliminarPeriodo: (id: string) =>
     request<void>(`/periodos/${id}`, { method: 'DELETE' }),
 
+  listarPerspectivas: () => request<Perspectiva[]>('/perspectivas'),
+
+  listarCatalogos: (incluirInactivos = false) =>
+    request<Perspectiva[]>(
+      `/catalogos${incluirInactivos ? '?incluirInactivos=true' : ''}`,
+    ),
+  crearCatalogo: (data: {
+    codigo: string
+    titulo: string
+    descripcion?: string
+    orden?: number
+    icono?: string
+    color?: string
+    activo?: boolean
+  }) =>
+    request<Perspectiva>('/catalogos', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  actualizarCatalogo: (
+    id: string,
+    data: {
+      codigo?: string
+      titulo?: string
+      descripcion?: string
+      orden?: number
+      icono?: string
+      color?: string
+      activo?: boolean
+    },
+  ) =>
+    request<Perspectiva>(`/catalogos/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  desactivarCatalogo: (id: string) =>
+    request<Perspectiva>(`/catalogos/${id}`, { method: 'DELETE' }),
+
   listarKpis: (periodoId?: string, perspectivaId?: string) => {
     const params = new URLSearchParams()
     if (periodoId) params.set('periodo', periodoId)
@@ -185,14 +251,64 @@ export const api = {
     return request<Reporte>(`/reportes${q ? `?${q}` : ''}`)
   },
 
+  reporteObjetivos: (params: {
+    perspectivaId?: string
+    responsableId?: string
+    periodoId?: string
+    estado?: string
+  } = {}) => {
+    const qs = new URLSearchParams()
+    if (params.perspectivaId) qs.set('perspectiva', params.perspectivaId)
+    if (params.responsableId) qs.set('responsable', params.responsableId)
+    if (params.periodoId) qs.set('periodo', params.periodoId)
+    if (params.estado) qs.set('estado', params.estado)
+    const q = qs.toString()
+    return request<ReporteObjetivos>(`/reportes/objetivos${q ? `?${q}` : ''}`)
+  },
+
+  reporteObjetivo: (
+    id: string,
+    params: { periodoId?: string; estado?: string } = {},
+  ) => {
+    const qs = new URLSearchParams()
+    if (params.periodoId) qs.set('periodo', params.periodoId)
+    if (params.estado) qs.set('estado', params.estado)
+    const q = qs.toString()
+    return request<ReporteObjetivoDetalle>(
+      `/reportes/objetivos/${id}${q ? `?${q}` : ''}`,
+    )
+  },
+
+  exportarReporteObjetivos: (params: {
+    perspectivaId?: string
+    responsableId?: string
+    periodoId?: string
+    estado?: string
+  } = {}) => {
+    const qs = new URLSearchParams()
+    if (params.perspectivaId) qs.set('perspectiva', params.perspectivaId)
+    if (params.responsableId) qs.set('responsable', params.responsableId)
+    if (params.periodoId) qs.set('periodo', params.periodoId)
+    if (params.estado) qs.set('estado', params.estado)
+    const q = qs.toString()
+    return requestBlob(`/reportes/objetivos/exportar${q ? `?${q}` : ''}`)
+  },
+
   // Objetivos
   listarObjetivos: (perspectivaId?: string) => {
     const qs = perspectivaId ? `?perspectiva=${perspectivaId}` : ''
     return request<Objetivo[]>(`/objetivos${qs}`)
   },
   obtenerObjetivo: (id: string) => request<Objetivo>(`/objetivos/${id}`),
-  crearObjetivo: (data: Partial<Objetivo> & { codigo: string; perspectivaId: string }) =>
-    request<Objetivo>('/objetivos', { method: 'POST', body: JSON.stringify(data) }),
+  crearObjetivo: (data: {
+    codigo?: string
+    nombre: string
+    descripcion?: string
+    perspectivaId: string
+    responsableId?: string
+    ponderacion?: number
+    orden?: number
+  }) => request<Objetivo>('/objetivos', { method: 'POST', body: JSON.stringify(data) }),
   actualizarObjetivo: (id: string, data: Partial<Objetivo>) =>
     request<Objetivo>(`/objetivos/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   desactivarObjetivo: (id: string) =>
@@ -254,18 +370,136 @@ export const api = {
     request<void>(`/desviaciones/${id}`, { method: 'DELETE' }),
 
   // Evidencias
-  listarEvidencias: (filtros: { kpiId?: string; medicionId?: string; desviacionId?: string } = {}) => {
+  listarEvidencias: (filtros: {
+    kpiId?: string
+    medicionId?: string
+    desviacionId?: string
+    tareaId?: string
+    resultadoTareaId?: string
+  } = {}) => {
     const qs = new URLSearchParams()
     if (filtros.kpiId) qs.set('kpi', filtros.kpiId)
     if (filtros.medicionId) qs.set('medicion', filtros.medicionId)
     if (filtros.desviacionId) qs.set('desviacion', filtros.desviacionId)
+    if (filtros.tareaId) qs.set('tarea', filtros.tareaId)
+    if (filtros.resultadoTareaId) qs.set('resultado', filtros.resultadoTareaId)
     const q = qs.toString()
     return request<Evidencia[]>(`/evidencias${q ? `?${q}` : ''}`)
   },
-  crearEvidencia: (data: Partial<Evidencia>) =>
+  obtenerEvidencia: (id: string) => request<Evidencia>(`/evidencias/${id}`),
+  crearEvidencia: (data: {
+    tipo: string
+    titulo: string
+    kpiId?: string
+    medicionId?: string
+    desviacionId?: string
+    tareaId?: string
+    resultadoTareaId?: string
+    descripcion?: string
+    url?: string
+    contenido?: string
+    nombreArchivo?: string
+    mimeType?: string
+    tamano?: number
+    contenidoBase64?: string
+  }) =>
     request<Evidencia>('/evidencias', { method: 'POST', body: JSON.stringify(data) }),
+  descargarEvidencia: (id: string) => requestBlob(`/evidencias/${id}/descargar`),
   eliminarEvidencia: (id: string) =>
     request<void>(`/evidencias/${id}`, { method: 'DELETE' }),
+
+  // Recomendaciones
+  listarRecomendaciones: (
+    filtros: {
+      objetivoId?: string
+      kpiId?: string
+      soloFijadas?: boolean
+    } = {},
+  ) => {
+    const qs = new URLSearchParams()
+    if (filtros.objetivoId) qs.set('objetivo', filtros.objetivoId)
+    if (filtros.kpiId) qs.set('kpi', filtros.kpiId)
+    if (filtros.soloFijadas) qs.set('soloFijadas', 'true')
+    const q = qs.toString()
+    return request<Recomendacion[]>(`/recomendaciones${q ? `?${q}` : ''}`)
+  },
+  crearRecomendacion: (data: {
+    contenido: string
+    objetivoId?: string
+    kpiId?: string
+  }) =>
+    request<Recomendacion>('/recomendaciones', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  actualizarRecomendacion: (id: string, data: { contenido: string }) =>
+    request<Recomendacion>(`/recomendaciones/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  fijarRecomendacion: (id: string, fijada: boolean) =>
+    request<Recomendacion>(`/recomendaciones/${id}/fijar`, {
+      method: 'PATCH',
+      body: JSON.stringify({ fijada }),
+    }),
+  eliminarRecomendacion: (id: string) =>
+    request<void>(`/recomendaciones/${id}`, { method: 'DELETE' }),
+
+  // Tareas
+  listarTareas: (
+    filtros: {
+      objetivoId?: string
+      kpiId?: string
+      responsableId?: string
+      estado?: string
+    } = {},
+  ) => {
+    const qs = new URLSearchParams()
+    if (filtros.objetivoId) qs.set('objetivo', filtros.objetivoId)
+    if (filtros.kpiId) qs.set('kpi', filtros.kpiId)
+    if (filtros.responsableId) qs.set('responsable', filtros.responsableId)
+    if (filtros.estado) qs.set('estado', filtros.estado)
+    const q = qs.toString()
+    return request<Tarea[]>(`/tareas${q ? `?${q}` : ''}`)
+  },
+  obtenerTarea: (id: string) => request<Tarea>(`/tareas/${id}`),
+  crearTarea: (data: {
+    titulo: string
+    descripcion?: string
+    objetivoId: string
+    kpiId?: string
+    responsableId?: string
+    fechaInicio?: string
+    fechaFin?: string
+    estado?: string
+    avance?: number
+  }) => request<Tarea>('/tareas', { method: 'POST', body: JSON.stringify(data) }),
+  actualizarTarea: (id: string, data: Partial<Tarea>) =>
+    request<Tarea>(`/tareas/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  eliminarTarea: (id: string) =>
+    request<void>(`/tareas/${id}`, { method: 'DELETE' }),
+  resultadosTarea: (id: string) =>
+    request<ResultadoTarea[]>(`/tareas/${id}/resultados`),
+  crearResultadoTarea: (
+    id: string,
+    data: { descripcion: string; valor?: number; fecha?: string },
+  ) =>
+    request<ResultadoTarea>(`/tareas/${id}/resultados`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  validarResultadoTarea: (
+    id: string,
+    data: {
+      estadoValidacion: 'VALIDADO' | 'RECHAZADO'
+      periodoId?: string
+      valorAplicado?: number
+    },
+  ) =>
+    request<ResultadoTarea>(`/tareas/resultados/${id}/validar`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 
   // Compromisos
   listarCompromisos: (filtros: { estado?: string; responsableId?: string } = {}) => {

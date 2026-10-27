@@ -1,8 +1,8 @@
 export const PERSPECTIVAS = [
-  { id: 'financiera', nombre: 'Financiera', icono: '💰', color: '#10b981', orden: 1, ponderacion: 30 },
-  { id: 'clientes', nombre: 'Clientes', icono: '👥', color: '#3b82f6', orden: 2, ponderacion: 30 },
-  { id: 'procesos', nombre: 'Procesos Internos', icono: '🔧', color: '#f59e0b', orden: 3, ponderacion: 20 },
-  { id: 'aprendizaje', nombre: 'Aprendizaje y Crecimiento', icono: '📚', color: '#8b5cf6', orden: 4, ponderacion: 20 },
+  { id: 'financiera', codigo: 'FIN', nombre: 'Financiera', descripcion: 'Resultados económicos y valor para los accionistas.', icono: '??', color: '#10b981', orden: 1, ponderacion: 30, activo: true },
+  { id: 'clientes', codigo: 'CLI', nombre: 'Clientes', descripcion: 'Satisfacción, retención y crecimiento de clientes.', icono: '??', color: '#3b82f6', orden: 2, ponderacion: 30, activo: true },
+  { id: 'procesos', codigo: 'PRO', nombre: 'Procesos Internos', descripcion: 'Eficiencia, calidad e innovación operativa.', icono: '??', color: '#f59e0b', orden: 3, ponderacion: 20, activo: true },
+  { id: 'aprendizaje', codigo: 'APR', nombre: 'Aprendizaje y Crecimiento', descripcion: 'Talento, cultura y capacidades organizacionales.', icono: '??', color: '#8b5cf6', orden: 4, ponderacion: 20, activo: true },
 ]
 
 // Objetivos estratégicos (12). El codigo coincide con el prefijo usado en KPIS[].objetivo.

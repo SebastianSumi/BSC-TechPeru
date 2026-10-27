@@ -1,15 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { CumplimientoService } from '../cumplimiento/cumplimiento.service.js';
 
 @Injectable()
 export class ComparacionService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  private calcular(meta: number, real: number, inverso: boolean) {
-    if (real === 0) return 0;
-    const pct = inverso ? (meta / real) * 100 : (real / meta) * 100;
-    return Math.round(pct * 10) / 10;
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cumplimiento: CumplimientoService,
+  ) {}
 
   /**
    * Compara el cumplimiento por perspectiva y KPI entre dos períodos (RF-19).
@@ -43,19 +41,12 @@ export class ComparacionService {
       }
     }
 
+    const reglas = await this.cumplimiento.reglas(empresaId);
     const filas = kpis.map((k) => {
       const medA = k.mediciones.find((m) => m.periodoId === periodoAId);
       const medB = k.mediciones.find((m) => m.periodoId === periodoBId);
-      const cumA = this.calcular(
-        medA?.meta ?? k.meta,
-        medA?.real ?? k.real,
-        k.inverso,
-      );
-      const cumB = this.calcular(
-        medB?.meta ?? k.meta,
-        medB?.real ?? k.real,
-        k.inverso,
-      );
+      const cumA = this.cumplimiento.evaluar(k, reglas, medA ?? null).mostrado;
+      const cumB = this.cumplimiento.evaluar(k, reglas, medB ?? null).mostrado;
       return {
         id: k.id,
         nombre: k.nombre,

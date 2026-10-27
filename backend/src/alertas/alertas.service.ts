@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AuditoriaService } from '../auditoria/auditoria.service.js';
 import { CreateAlertaDto, UpdateAlertaDto } from './alertas.dto.js';
+import { CumplimientoService } from '../cumplimiento/cumplimiento.service.js';
 
 @Injectable()
 export class AlertasService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditoria: AuditoriaService,
+    private readonly cumplimiento: CumplimientoService,
   ) {}
 
   listar(filtros: {
@@ -94,6 +96,7 @@ export class AlertasService {
       select: { empresaId: true },
     });
     const empresaId = periodo?.empresaId ?? 'techperu';
+    const reglas = await this.cumplimiento.reglas(empresaId);
 
     const kpis = await this.prisma.kpi.findMany({
       where: { activo: true, empresaId },
@@ -103,13 +106,10 @@ export class AlertasService {
     let generadas = 0;
     for (const k of kpis) {
       const med = k.mediciones[0];
-      const meta = med?.meta ?? k.meta;
-      const real = med?.real ?? k.real;
-      if (real === 0) continue;
-      const pct = k.inverso ? (meta / real) * 100 : (real / meta) * 100;
-      const cumplimiento = Math.round(pct * 10) / 10;
-      const uAlerta = k.umbralAlerta || config?.umbralAlerta || 75;
-      if (cumplimiento >= uAlerta) continue;
+      const evaluado = this.cumplimiento.evaluar(k, reglas, med ?? null);
+      if (evaluado.estado !== 'CRITICO') continue;
+      const cumplimiento = evaluado.mostrado;
+      const uAlerta = k.umbralAlerta || reglas.umbralAlerta;
 
       const existente = await this.prisma.alerta.findFirst({
         where: {

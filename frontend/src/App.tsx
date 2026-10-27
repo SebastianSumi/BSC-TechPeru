@@ -16,8 +16,10 @@ import {
   GitBranch,
   Handshake,
   LayoutDashboard,
+  ListChecks,
   LogOut,
   Menu,
+  MessageSquare,
   Network,
   Paperclip,
   ScrollText,
@@ -46,6 +48,9 @@ import { AdminPanel } from './components/AdminPanel'
 import { PeriodoSelector } from './components/PeriodoSelector'
 import { MapaEstrategicoView } from './components/MapaEstrategico'
 import { ObjetivosPanel } from './components/ObjetivosPanel'
+import { PerspectivasPanel } from './components/PerspectivasPanel'
+import { TareasPanel } from './components/TareasPanel'
+import { RecomendacionesPanel } from './components/RecomendacionesPanel'
 import { DiccionarioPanel } from './components/DiccionarioPanel'
 import { IniciativasPanel } from './components/IniciativasPanel'
 import { AlertasPanel } from './components/AlertasPanel'
@@ -68,6 +73,9 @@ type Tab =
   | 'reportes'
   | 'mapa'
   | 'objetivos'
+  | 'perspectivas'
+  | 'tareas'
+  | 'recomendaciones'
   | 'diccionario'
   | 'iniciativas'
   | 'alertas'
@@ -113,6 +121,27 @@ const TABS: TabDef[] = [
     desc: 'Define resultados prioritarios y alinea cada objetivo con su perspectiva.',
     group: 'Estratégico',
     icon: <Target size={16} />,
+  },
+  {
+    id: 'perspectivas',
+    label: 'Catálogo de perspectivas',
+    desc: 'Administra las perspectivas del BSC y su vigencia.',
+    group: 'Estratégico',
+    icon: <Building2 size={16} />,
+  },
+  {
+    id: 'tareas',
+    label: 'Tareas y resultados',
+    desc: 'Da seguimiento a las tareas, resultados y su validación contra los KPI.',
+    group: 'Estratégico',
+    icon: <ListChecks size={16} />,
+  },
+  {
+    id: 'recomendaciones',
+    label: 'Recomendaciones',
+    desc: 'Registra recomendaciones y fija la vigente por objetivo o KPI.',
+    group: 'Estratégico',
+    icon: <MessageSquare size={16} />,
   },
   {
     id: 'diccionario',
@@ -565,6 +594,9 @@ function AppContent() {
             tab !== 'admin' &&
             tab !== 'mapa' &&
             tab !== 'objetivos' &&
+            tab !== 'perspectivas' &&
+            tab !== 'tareas' &&
+            tab !== 'recomendaciones' &&
             tab !== 'diccionario' &&
             tab !== 'iniciativas' &&
             tab !== 'alertas' &&
@@ -609,6 +641,9 @@ function AppContent() {
 
           {tab === 'mapa' && <MapaEstrategicoView periodos={periodos} />}
           {tab === 'objetivos' && <ObjetivosPanel />}
+          {tab === 'perspectivas' && <PerspectivasPanel />}
+          {tab === 'tareas' && <TareasPanel />}
+          {tab === 'recomendaciones' && <RecomendacionesPanel />}
           {tab === 'diccionario' && <DiccionarioPanel periodos={periodos} />}
           {tab === 'iniciativas' && <IniciativasPanel />}
           {tab === 'alertas' && <AlertasPanel periodos={periodos} />}

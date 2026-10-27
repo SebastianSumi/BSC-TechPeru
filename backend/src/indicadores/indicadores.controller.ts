@@ -33,6 +33,14 @@ export class IndicadoresController {
     return this.indicadores.diccionario(perspectivaId, periodoId, empresaId);
   }
 
+  @Get('agrupados')
+  agrupados(
+    @Query('empresa') empresaId?: string,
+    @Query('periodo') periodoId?: string,
+  ) {
+    return this.indicadores.agrupados(empresaId, periodoId);
+  }
+
   @Get(':id')
   obtener(@Param('id') id: string) {
     return this.indicadores.obtener(id);
@@ -48,19 +56,32 @@ export class IndicadoresController {
     return this.indicadores.crear(dto, user.id, empresaId);
   }
 
+  @Patch(':id/equipo')
+  @Roles(RolNombre.ADMIN, RolNombre.GERENTE, RolNombre.RESPONSABLE)
+  asignarEquipo(
+    @Param('id') id: string,
+    @Body('usuarioIds') usuarioIds: string[],
+    @CurrentUser() user: { id: string; rol: string },
+  ) {
+    return this.indicadores.asignarEquipo(id, usuarioIds ?? [], user);
+  }
+
   @Patch(':id')
-  @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
+  @Roles(RolNombre.ADMIN, RolNombre.GERENTE, RolNombre.RESPONSABLE)
   actualizar(
     @Param('id') id: string,
     @Body() dto: UpdateIndicadorDto,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: { id: string; rol: string },
   ) {
-    return this.indicadores.actualizar(id, dto, user.id);
+    return this.indicadores.actualizar(id, dto, user);
   }
 
   @Delete(':id')
-  @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
-  desactivar(@Param('id') id: string, @CurrentUser() user: { id: string }) {
-    return this.indicadores.desactivar(id, user.id);
+  @Roles(RolNombre.ADMIN, RolNombre.GERENTE, RolNombre.RESPONSABLE)
+  desactivar(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string; rol: string },
+  ) {
+    return this.indicadores.desactivar(id, user);
   }
 }

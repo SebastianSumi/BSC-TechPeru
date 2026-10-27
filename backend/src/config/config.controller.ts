@@ -4,10 +4,11 @@ import {
   Get,
   Param,
   Patch,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from './config.service.js';
-import type { UpdateConfigDto } from './config.service.js';
+import { UpdateConfigDto } from './config.dto.js';
 import { JwtAuthGuard, RolesGuard } from '../auth/guards.js';
 import { Roles } from '../auth/decorators.js';
 import { RolNombre } from '../auth/roles.constants.js';
@@ -19,8 +20,8 @@ export class ConfigController {
   constructor(private readonly config: ConfigService) {}
 
   @Get()
-  obtener() {
-    return this.config.obtener();
+  obtener(@Query('empresa') empresaId?: string) {
+    return this.config.obtener(empresaId);
   }
 
   @Patch()
@@ -28,8 +29,9 @@ export class ConfigController {
   actualizar(
     @Body() dto: UpdateConfigDto,
     @CurrentUser() user: { id: string },
+    @Query('empresa') empresaId?: string,
   ) {
-    return this.config.actualizar(dto, user.id);
+    return this.config.actualizar(dto, user.id, empresaId);
   }
 
   @Patch('perspectivas/:id/ponderacion')
