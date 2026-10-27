@@ -83,6 +83,13 @@ export class ImportacionService {
         errores.push({ fila: i + 1, mensaje: `KPI ${fila.kpiId} no existe` });
         continue;
       }
+      if (kpi.empresaId !== periodo.empresaId) {
+        errores.push({
+          fila: i + 1,
+          mensaje: `KPI ${fila.kpiId} pertenece a otra empresa`,
+        });
+        continue;
+      }
       await this.prisma.medicion.upsert({
         where: {
           kpiId_periodoId: { kpiId: fila.kpiId, periodoId: dto.periodoId },

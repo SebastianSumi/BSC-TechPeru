@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   Activity,
   AlertTriangle,
   ArrowLeftRight,
   Bell,
   BookOpen,
+  Building2,
   CalendarClock,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
   FileBarChart,
   FileWarning,
@@ -28,6 +30,7 @@ import {
 } from 'lucide-react'
 import { AuthProvider, useAuth } from './store/useAuth'
 import { useBsc } from './store/useBsc'
+import { useEmpresa } from './store/useEmpresa'
 import { ESTADO_META, resumenPorPerspectiva } from './lib/bsc'
 import { api } from './lib/api'
 import { PERSPECTIVAS } from './data/kpis'
@@ -273,30 +276,37 @@ function AppContent() {
   const [sel, setSel] = useState<KpiEvaluado | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [sidebarAbierto, setSidebarAbierto] = useState(false)
+  const [orgMenu, setOrgMenu] = useState(false)
+
+  const { empresas, activa, activaId, cambiar } = useEmpresa(!!usuario)
 
   const { kpis, evaluados, setReal, reset, dirty, resumenGlobal, source } =
-    useBsc(periodoId || null)
+    useBsc(periodoId || null, activaId)
 
   const resumenes = useMemo(() => resumenPorPerspectiva(kpis), [kpis])
   const selLive = sel ? evaluados.find((e) => e.id === sel.id) ?? null : null
 
-  const cargarPeriodos = () => {
+  const cargarPeriodos = (forzar = false) => {
     api
       .listarPeriodos()
       .then((ps) => {
         setPeriodos(ps)
-        if (!periodoId) {
-          const activo = ps.find((p) => p.activo)
-          if (activo) setPeriodoId(activo.id)
-        }
+        setPeriodoId((prev) => {
+          if (!forzar && prev) return prev
+          return ps.find((p) => p.activo)?.id ?? ''
+        })
       })
       .catch(() => {})
   }
 
   useEffect(() => {
-    if (usuario) cargarPeriodos()
+    if (!usuario) return
+    setSel(null)
+    setExpandedId(null)
+    setOrgMenu(false)
+    cargarPeriodos(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [usuario])
+  }, [usuario, activaId])
 
   if (cargando) {
     return (
@@ -327,17 +337,64 @@ function AppContent() {
             <Activity size={19} />
           </span>
           <span>
-            <strong>BSC TechPeru</strong>
-            <small>Balanced Scorecard 2025</small>
+            <strong>BSC Suite</strong>
+            <small>Balanced Scorecard</small>
           </span>
         </div>
 
-        <div className="bsc-org">
-          <span className="bsc-org-icon">TP</span>
-          <span>
-            <strong>TechPeru SAC</strong>
-            <small>Plan estratégico 2025</small>
-          </span>
+        <div className="bsc-org-wrap">
+          <button
+            type="button"
+            className="bsc-org"
+            onClick={() => setOrgMenu((o) => !o)}
+            aria-haspopup="menu"
+            aria-expanded={orgMenu}
+            title="Cambiar de compañía"
+          >
+            <span
+              className="bsc-org-icon"
+              style={{
+                background: `${activa?.color ?? '#2563eb'}26`,
+                color: activa?.color ?? '#93c5fd',
+              }}
+            >
+              {activa?.sigla ?? 'TP'}
+            </span>
+            <span className="bsc-org-meta">
+              <strong>{activa?.nombre ?? 'TechPeru SAC'}</strong>
+              <small>{activa?.sector || 'Compañía'}</small>
+            </span>
+            <ChevronDown size={14} className={`bsc-org-caret${orgMenu ? ' open' : ''}`} />
+          </button>
+
+          {orgMenu && (
+            <div className="bsc-org-menu" role="menu">
+              <p className="bsc-org-menu-title">Compañías</p>
+              {empresas.map((e) => (
+                <button
+                  key={e.id}
+                  type="button"
+                  role="menuitem"
+                  className={`bsc-org-option${e.id === activaId ? ' active' : ''}`}
+                  onClick={() => {
+                    cambiar(e.id)
+                    setOrgMenu(false)
+                  }}
+                >
+                  <span className="dot" style={{ background: e.color }} />
+                  <span className="opt-meta">
+                    <strong>{e.nombre}</strong>
+                    <small>
+                      {e.sector || 'Compañía'}
+                      {e._count ? ` · ${e._count.objetivos} objetivos · ${e._count.kpis} KPIs` : ''}
+                    </small>
+                  </span>
+                  {e.id === activaId && <CheckCircle2 size={14} />}
+                </button>
+              ))}
+            </div>
+          )}
+          {orgMenu && <div className="bsc-org-scrim" onClick={() => setOrgMenu(false)} />}
         </div>
 
         <nav className="bsc-nav">
@@ -390,7 +447,10 @@ function AppContent() {
               <Menu size={18} />
             </button>
             <div className="bsc-crumb">
-              <span>TechPeru SAC</span>
+              <span className="crumb-org">
+                <Building2 size={13} />
+                {activa?.nombre ?? 'TechPeru SAC'}
+              </span>
               <span className="crumb-sep">/</span>
               <strong>{meta.label}</strong>
               {periodoActual && <span className="pill pill-blue pill-no-dot">{periodoActual.nombre}</span>}
@@ -428,7 +488,13 @@ function AppContent() {
                   background: source === 'api' ? '#22c55e' : '#f59e0b',
                   boxShadow: source === 'api' ? '0 0 0 4px rgba(34,197,94,0.1)' : '0 0 0 4px rgba(245,158,11,0.1)',
                 }}
-                title={source === 'api' ? 'Conectado al API' : 'Datos locales'}
+                title={
+                  source === 'api'
+                    ? 'Conectado al API'
+                    : source === 'sin-datos'
+                      ? 'API no disponible'
+                      : 'Datos locales'
+                }
               />
             </div>
             <div className="bsc-top-user">
@@ -442,8 +508,9 @@ function AppContent() {
         </header>
 
         <main className="bsc-content">
+          <Fragment key={activaId}>
           <PageHeader
-            eyebrow={meta.group}
+            eyebrow={`${activa?.nombre ?? 'TechPeru SAC'} · ${meta.group}`}
             title={meta.label}
             desc={meta.desc}
             actions={
@@ -460,13 +527,15 @@ function AppContent() {
             }
           />
 
-          {source === 'local' && (
+          {source !== 'api' && (
             <div
               className="mb-4 flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[11px]"
               style={{ background: '#fffbeb', borderColor: '#fde68a', color: '#92400e' }}
             >
               <AlertTriangle size={14} />
-              API no disponible: se muestran datos locales de demostración.
+              {source === 'local'
+                ? 'API no disponible: se muestran datos locales de demostración.'
+                : 'API no disponible: no hay datos locales para esta compañía.'}
             </div>
           )}
 
@@ -555,12 +624,19 @@ function AppContent() {
           {tab === 'auditoria' && <AuditoriaPanel />}
           {tab === 'reportes' && <Reportes periodoId={periodoId || null} />}
           {tab === 'admin' && <AdminPanel />}
+          </Fragment>
         </main>
 
         <footer className="bsc-footer">
-          <span>TechPeru SAC · Balanced Scorecard 2025</span>
           <span>
-            {source === 'api' ? 'Datos en vivo (PostgreSQL)' : 'Modo demostración local'} ·{' '}
+            {activa?.nombre ?? 'TechPeru SAC'} · Balanced Scorecard {periodoActual?.anio ?? 2025}
+          </span>
+          <span>
+            {source === 'api'
+              ? 'Datos en vivo (PostgreSQL)'
+              : source === 'local'
+                ? 'Modo demostración local'
+                : 'Sin conexión al API'} ·{' '}
             {usuario.rol}
           </span>
         </footer>

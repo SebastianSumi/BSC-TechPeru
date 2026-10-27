@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { EmpresasModule } from './empresas/empresas.module.js';
 import { BscModule } from './bsc/bsc.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { PeriodosModule } from './periodos/periodos.module.js';
@@ -27,6 +28,7 @@ import { JwtAuthGuard, RolesGuard } from './auth/guards.js';
 @Module({
   imports: [
     PrismaModule,
+    EmpresasModule,
     AuditoriaModule,
     AuthModule,
     BscModule,

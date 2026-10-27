@@ -14,8 +14,9 @@ export class VersionesService {
     private readonly auditoria: AuditoriaService,
   ) {}
 
-  listar() {
+  listar(empresaId?: string) {
     return this.prisma.planVersion.findMany({
+      where: empresaId ? { empresaId } : undefined,
       include: { periodo: { select: { id: true, nombre: true } } },
       orderBy: { createdAt: 'desc' },
     });
@@ -30,7 +31,11 @@ export class VersionesService {
     return version;
   }
 
-  async crear(dto: CreateVersionDto, usuarioId?: string) {
+  async crear(
+    dto: CreateVersionDto,
+    usuarioId?: string,
+    empresaId = 'techperu',
+  ) {
     const existe = await this.prisma.planVersion.findUnique({
       where: { version: dto.version },
     });
@@ -39,8 +44,14 @@ export class VersionesService {
     // Snapshot del estado actual del plan estratégico
     const [perspectivas, objetivos, kpis] = await Promise.all([
       this.prisma.perspectiva.findMany({ orderBy: { orden: 'asc' } }),
-      this.prisma.objetivo.findMany({ orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }] }),
-      this.prisma.kpi.findMany({ orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }] }),
+      this.prisma.objetivo.findMany({
+        where: { empresaId },
+        orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }],
+      }),
+      this.prisma.kpi.findMany({
+        where: { empresaId },
+        orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }],
+      }),
     ]);
 
     const snapshot = {
@@ -52,6 +63,7 @@ export class VersionesService {
 
     const version = await this.prisma.planVersion.create({
       data: {
+        empresaId,
         version: dto.version,
         descripcion: dto.descripcion ?? '',
         periodoId: dto.periodoId,
@@ -74,9 +86,9 @@ export class VersionesService {
    * Publica una versión: la marca VIGENTE y archiva las anteriores (RF-13 / RN-13).
    */
   async publicar(id: string, usuarioId?: string) {
-    await this.obtener(id);
+    const actual = await this.obtener(id);
     await this.prisma.planVersion.updateMany({
-      where: { estado: 'VIGENTE' },
+      where: { estado: 'VIGENTE', empresaId: actual.empresaId },
       data: { estado: 'ARCHIVADA' },
     });
     const version = await this.prisma.planVersion.update({

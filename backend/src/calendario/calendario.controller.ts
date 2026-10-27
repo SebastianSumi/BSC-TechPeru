@@ -22,8 +22,11 @@ export class CalendarioController {
   constructor(private readonly calendario: CalendarioService) {}
 
   @Get()
-  listar(@Query('periodo') periodoId?: string) {
-    return this.calendario.listar(periodoId);
+  listar(
+    @Query('periodo') periodoId?: string,
+    @Query('empresa') empresaId?: string,
+  ) {
+    return this.calendario.listar(periodoId, empresaId);
   }
 
   @Post()

@@ -17,11 +17,18 @@ export class DesviacionesService {
     private readonly auditoria: AuditoriaService,
   ) {}
 
-  listar(filtros: { kpiId?: string; estado?: string } = {}) {
+  listar(filtros: {
+    kpiId?: string;
+    estado?: string;
+    empresaId?: string;
+  } = {}) {
     return this.prisma.desviacion.findMany({
       where: {
         ...(filtros.kpiId ? { kpiId: filtros.kpiId } : {}),
         ...(filtros.estado ? { estado: filtros.estado as never } : {}),
+        ...(filtros.empresaId
+          ? { kpi: { empresaId: filtros.empresaId } }
+          : {}),
       },
       include: {
         kpi: { select: { id: true, nombre: true, objetivo: true } },

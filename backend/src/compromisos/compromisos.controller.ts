@@ -28,8 +28,9 @@ export class CompromisosController {
   listar(
     @Query('estado') estado?: string,
     @Query('responsable') responsableId?: string,
+    @Query('empresa') empresaId?: string,
   ) {
-    return this.compromisos.listar({ estado, responsableId });
+    return this.compromisos.listar({ estado, responsableId, empresaId });
   }
 
   @Post()

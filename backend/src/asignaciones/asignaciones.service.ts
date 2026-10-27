@@ -10,8 +10,9 @@ import { CreateAsignacionDto } from './asignaciones.dto.js';
 export class AsignacionesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  listar() {
+  listar(empresaId?: string) {
     return this.prisma.asignacion.findMany({
+      where: empresaId ? { kpi: { empresaId } } : undefined,
       include: {
         usuario: { include: { rol: true } },
         kpi: true,
@@ -20,9 +21,9 @@ export class AsignacionesService {
     });
   }
 
-  porUsuario(usuarioId: string) {
+  porUsuario(usuarioId: string, empresaId?: string) {
     return this.prisma.asignacion.findMany({
-      where: { usuarioId },
+      where: { usuarioId, ...(empresaId ? { kpi: { empresaId } } : {}) },
       include: { kpi: true },
     });
   }

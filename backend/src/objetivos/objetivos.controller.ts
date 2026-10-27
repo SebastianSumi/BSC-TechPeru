@@ -25,10 +25,12 @@ export class ObjetivosController {
   listar(
     @Query('perspectiva') perspectivaId?: string,
     @Query('incluirInactivos') incluirInactivos?: string,
+    @Query('empresa') empresaId?: string,
   ) {
     return this.objetivos.listar(
       perspectivaId,
       incluirInactivos === 'true',
+      empresaId,
     );
   }
 
@@ -39,8 +41,12 @@ export class ObjetivosController {
 
   @Post()
   @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
-  crear(@Body() dto: CreateObjetivoDto, @CurrentUser() user: { id: string }) {
-    return this.objetivos.crear(dto, user.id);
+  crear(
+    @Body() dto: CreateObjetivoDto,
+    @CurrentUser() user: { id: string },
+    @Query('empresa') empresaId?: string,
+  ) {
+    return this.objetivos.crear(dto, user.id, empresaId);
   }
 
   @Patch(':id')

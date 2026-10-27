@@ -28,8 +28,9 @@ export class IndicadoresController {
   diccionario(
     @Query('perspectiva') perspectivaId?: string,
     @Query('periodo') periodoId?: string,
+    @Query('empresa') empresaId?: string,
   ) {
-    return this.indicadores.diccionario(perspectivaId, periodoId);
+    return this.indicadores.diccionario(perspectivaId, periodoId, empresaId);
   }
 
   @Get(':id')
@@ -39,8 +40,12 @@ export class IndicadoresController {
 
   @Post()
   @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
-  crear(@Body() dto: CreateIndicadorDto, @CurrentUser() user: { id: string }) {
-    return this.indicadores.crear(dto, user.id);
+  crear(
+    @Body() dto: CreateIndicadorDto,
+    @CurrentUser() user: { id: string },
+    @Query('empresa') empresaId?: string,
+  ) {
+    return this.indicadores.crear(dto, user.id, empresaId);
   }
 
   @Patch(':id')

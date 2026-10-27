@@ -10,14 +10,17 @@ import { CreatePeriodoDto, UpdatePeriodoDto } from './periodos.dto.js';
 export class PeriodosService {
   constructor(private readonly prisma: PrismaService) {}
 
-  listar() {
+  listar(empresaId?: string) {
     return this.prisma.periodo.findMany({
+      where: empresaId ? { empresaId } : undefined,
       orderBy: [{ anio: 'desc' }, { trimestre: 'desc' }],
     });
   }
 
-  async activo() {
-    return this.prisma.periodo.findFirst({ where: { activo: true } });
+  async activo(empresaId?: string) {
+    return this.prisma.periodo.findFirst({
+      where: { activo: true, ...(empresaId ? { empresaId } : {}) },
+    });
   }
 
   private fechas(anio: number, trimestre: number) {
@@ -27,22 +30,22 @@ export class PeriodosService {
     return { fechaInicio, fechaFin };
   }
 
-  async crear(dto: CreatePeriodoDto) {
+  async crear(dto: CreatePeriodoDto, empresaId = 'techperu') {
     const existe = await this.prisma.periodo.findUnique({
-      where: { nombre: dto.nombre },
+      where: { empresaId_nombre: { empresaId, nombre: dto.nombre } },
     });
     if (existe) throw new BadRequestException('El período ya existe');
     const { fechaInicio, fechaFin } = this.fechas(dto.anio, dto.trimestre);
     return this.prisma.periodo.create({
-      data: { ...dto, fechaInicio, fechaFin },
+      data: { ...dto, empresaId, fechaInicio, fechaFin },
     });
   }
 
   async actualizar(id: string, dto: UpdatePeriodoDto) {
-    await this.obtener(id);
+    const actual = await this.obtener(id);
     if (dto.activo === true) {
       await this.prisma.periodo.updateMany({
-        where: { activo: true },
+        where: { activo: true, empresaId: actual.empresaId },
         data: { activo: false },
       });
     }
@@ -50,9 +53,9 @@ export class PeriodosService {
   }
 
   async activar(id: string) {
-    await this.obtener(id);
+    const actual = await this.obtener(id);
     await this.prisma.periodo.updateMany({
-      where: { activo: true },
+      where: { activo: true, empresaId: actual.empresaId },
       data: { activo: false },
     });
     return this.prisma.periodo.update({

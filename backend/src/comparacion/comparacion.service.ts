@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
@@ -14,12 +14,16 @@ export class ComparacionService {
   /**
    * Compara el cumplimiento por perspectiva y KPI entre dos períodos (RF-19).
    */
-  async comparar(periodoAId: string, periodoBId: string) {
+  async comparar(
+    periodoAId: string,
+    periodoBId: string,
+    empresaId?: string,
+  ) {
     const [periodoA, periodoB, kpis] = await Promise.all([
       this.prisma.periodo.findUnique({ where: { id: periodoAId } }),
       this.prisma.periodo.findUnique({ where: { id: periodoBId } }),
       this.prisma.kpi.findMany({
-        where: { activo: true },
+        where: { activo: true, ...(empresaId ? { empresaId } : {}) },
         include: {
           perspectiva: true,
           mediciones: { where: { periodoId: { in: [periodoAId, periodoBId] } } },
@@ -27,6 +31,17 @@ export class ComparacionService {
         orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }],
       }),
     ]);
+
+    if (
+      empresaId &&
+      (periodoA?.empresaId === empresaId || periodoB?.empresaId === empresaId)
+    ) {
+      if (periodoA?.empresaId !== empresaId || periodoB?.empresaId !== empresaId) {
+        throw new BadRequestException(
+          'Los períodos deben pertenecer a la misma empresa',
+        );
+      }
+    }
 
     const filas = kpis.map((k) => {
       const medA = k.mediciones.find((m) => m.periodoId === periodoAId);

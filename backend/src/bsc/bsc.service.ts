@@ -45,9 +45,16 @@ export class BscService {
     return this.prisma.perspectiva.findMany({ orderBy: { orden: 'asc' } });
   }
 
-  async getKpis(perspectivaId?: string, periodoId?: string) {
+  async getKpis(
+    perspectivaId?: string,
+    periodoId?: string,
+    empresaId?: string,
+  ) {
     const kpis = await this.prisma.kpi.findMany({
-      where: perspectivaId ? { perspectivaId } : undefined,
+      where: {
+        ...(perspectivaId ? { perspectivaId } : {}),
+        ...(empresaId ? { empresaId } : {}),
+      },
       orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }],
       include: periodoId
         ? { mediciones: { where: { periodoId } } }
@@ -74,8 +81,8 @@ export class BscService {
     return this.evaluar(base, mediciones?.[0]);
   }
 
-  async getResumen(periodoId?: string) {
-    const evaluados = await this.getKpis(undefined, periodoId);
+  async getResumen(periodoId?: string, empresaId?: string) {
+    const evaluados = await this.getKpis(undefined, periodoId, empresaId);
     const estados = contarEstados(evaluados);
     const perspectivas = await this.prisma.perspectiva.findMany({
       orderBy: { orden: 'asc' },
@@ -142,6 +149,7 @@ export class BscService {
     perspectivaId?: string;
     periodoId?: string;
     usuarioId?: string;
+    empresaId?: string;
   }) {
     let kpiIds: string[] | undefined;
     if (params.usuarioId) {
@@ -154,6 +162,7 @@ export class BscService {
     const kpis = await this.prisma.kpi.findMany({
       where: {
         ...(params.perspectivaId ? { perspectivaId: params.perspectivaId } : {}),
+        ...(params.empresaId ? { empresaId: params.empresaId } : {}),
         ...(kpiIds ? { id: { in: kpiIds } } : {}),
       },
       orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }],

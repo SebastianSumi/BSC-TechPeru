@@ -25,8 +25,12 @@ export class DesviacionesController {
   constructor(private readonly desviaciones: DesviacionesService) {}
 
   @Get()
-  listar(@Query('kpi') kpiId?: string, @Query('estado') estado?: string) {
-    return this.desviaciones.listar({ kpiId, estado });
+  listar(
+    @Query('kpi') kpiId?: string,
+    @Query('estado') estado?: string,
+    @Query('empresa') empresaId?: string,
+  ) {
+    return this.desviaciones.listar({ kpiId, estado, empresaId });
   }
 
   @Post()

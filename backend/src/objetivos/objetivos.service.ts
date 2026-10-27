@@ -14,10 +14,15 @@ export class ObjetivosService {
     private readonly auditoria: AuditoriaService,
   ) {}
 
-  listar(perspectivaId?: string, incluirInactivos = false) {
+  listar(
+    perspectivaId?: string,
+    incluirInactivos = false,
+    empresaId?: string,
+  ) {
     return this.prisma.objetivo.findMany({
       where: {
         ...(perspectivaId ? { perspectivaId } : {}),
+        ...(empresaId ? { empresaId } : {}),
         ...(incluirInactivos ? {} : { activo: true }),
       },
       include: { perspectiva: true, _count: { select: { kpis: true } } },
@@ -34,7 +39,11 @@ export class ObjetivosService {
     return objetivo;
   }
 
-  async crear(dto: CreateObjetivoDto, usuarioId?: string) {
+  async crear(
+    dto: CreateObjetivoDto,
+    usuarioId?: string,
+    empresaId = 'techperu',
+  ) {
     const perspectiva = await this.prisma.perspectiva.findUnique({
       where: { id: dto.perspectivaId },
     });
@@ -45,7 +54,9 @@ export class ObjetivosService {
     });
     if (existe) throw new BadRequestException('El código de objetivo ya existe');
 
-    const objetivo = await this.prisma.objetivo.create({ data: dto });
+    const objetivo = await this.prisma.objetivo.create({
+      data: { ...dto, empresaId },
+    });
     await this.auditoria.registrar({
       usuarioId,
       accion: 'CREAR',

@@ -303,3 +303,14 @@ export interface AprobacionItem {
   updatedAt: string
   aprobaciones?: unknown[]
 }
+
+export interface Empresa {
+  id: string
+  nombre: string
+  sigla: string
+  sector: string
+  color: string
+  descripcion: string
+  activo: boolean
+  _count?: { objetivos: number; kpis: number; periodos: number }
+}

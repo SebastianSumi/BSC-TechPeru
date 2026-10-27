@@ -38,10 +38,10 @@ export function Login() {
           </span>
           <span>
             <strong className="block text-[15px] font-bold tracking-tight text-[var(--navy)]">
-              BSC TechPeru
+              BSC Suite
             </strong>
             <small className="block text-[10px] text-[var(--muted)]">
-              Balanced Scorecard 2025
+              Balanced Scorecard
             </small>
           </span>
         </div>
@@ -51,7 +51,7 @@ export function Login() {
           Inicia sesión en tu<br />cuadro de mando
         </h1>
         <p className="mt-2 text-[13px] text-[var(--muted)]">
-          Consulta el desempeño estratégico de TechPeru SAC y toma decisiones basadas en datos.
+          Consulta el desempeño estratégico de cada compañía y toma decisiones basadas en datos.
         </p>
 
         <form onSubmit={onSubmit} className="mt-7 grid gap-4">

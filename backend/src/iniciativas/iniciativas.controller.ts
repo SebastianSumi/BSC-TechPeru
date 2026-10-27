@@ -28,8 +28,9 @@ export class IniciativasController {
   listar(
     @Query('objetivo') objetivoId?: string,
     @Query('estado') estado?: string,
+    @Query('empresa') empresaId?: string,
   ) {
-    return this.iniciativas.listar({ objetivoId, estado });
+    return this.iniciativas.listar({ objetivoId, estado, empresaId });
   }
 
   @Get(':id')

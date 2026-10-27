@@ -17,11 +17,18 @@ export class IniciativasService {
     private readonly auditoria: AuditoriaService,
   ) {}
 
-  listar(filtros: { objetivoId?: string; estado?: string } = {}) {
+  listar(filtros: {
+    objetivoId?: string;
+    estado?: string;
+    empresaId?: string;
+  } = {}) {
     return this.prisma.iniciativa.findMany({
       where: {
         ...(filtros.objetivoId ? { objetivoId: filtros.objetivoId } : {}),
         ...(filtros.estado ? { estado: filtros.estado as never } : {}),
+        ...(filtros.empresaId
+          ? { objetivoRef: { empresaId: filtros.empresaId } }
+          : {}),
       },
       include: {
         objetivoRef: { include: { perspectiva: true } },

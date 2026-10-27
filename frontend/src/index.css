@@ -152,6 +152,137 @@ textarea {
   color: #a5b8ce;
 }
 
+.bsc-org-wrap {
+  position: relative;
+  margin: 0 14px 14px;
+}
+
+.bsc-org {
+  width: 100%;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.bsc-org:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.bsc-org-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.bsc-org-meta strong {
+  display: block;
+  font-size: 10.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bsc-org-caret {
+  flex-shrink: 0;
+  color: #a5b8ce;
+  transition: transform 0.15s ease;
+}
+
+.bsc-org-caret.open {
+  transform: rotate(180deg);
+}
+
+.bsc-org-menu {
+  position: absolute;
+  z-index: 60;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: #0f172a;
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.5);
+}
+
+.bsc-org-menu-title {
+  padding: 6px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7f96b3;
+}
+
+.bsc-org-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #e2e8f0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bsc-org-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.bsc-org-option.active {
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.bsc-org-option .dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.bsc-org-option .opt-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.bsc-org-option strong {
+  display: block;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bsc-org-option small {
+  display: block;
+  margin-top: 1px;
+  font-size: 9.5px;
+  color: #94a3b8;
+}
+
+.bsc-org-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: transparent;
+  border: 0;
+}
+
+.crumb-org {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .bsc-nav {
   flex: 1;
   overflow-y: auto;

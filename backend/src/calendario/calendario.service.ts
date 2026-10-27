@@ -10,9 +10,12 @@ export class CalendarioService {
     private readonly auditoria: AuditoriaService,
   ) {}
 
-  listar(periodoId?: string) {
+  listar(periodoId?: string, empresaId?: string) {
     return this.prisma.eventoCalendario.findMany({
-      where: periodoId ? { periodoId } : undefined,
+      where: {
+        ...(periodoId ? { periodoId } : {}),
+        ...(empresaId ? { periodo: { empresaId } } : {}),
+      },
       include: {
         periodo: { select: { id: true, nombre: true } },
         responsable: { select: { id: true, nombre: true } },

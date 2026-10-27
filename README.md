@@ -152,10 +152,11 @@ BSC-TechPeru/
 
 | Modelo | Descripción |
 |--------|-------------|
+| `Empresa` | Perfiles de compañía (TechPeru, Nova Retail, Andes Salud) con sigla, sector y color |
 | `Rol` | ADMIN, GERENTE, ANALISTA, RESPONSABLE |
 | `Usuario` | Credenciales (bcrypt) + rol |
 | `Perspectiva` / `Kpi` | Catálogo del BSC (4 perspectivas, 36 KPIs) |
-| `Periodo` | Trimestres (2025-Q1…Q4) con bandera `activo` |
+| `Periodo` | Trimestres por compañía (`@@unique([empresaId, nombre])`) con bandera `activo` |
 | `Medicion` | Valor `meta`/`real` de un KPI **en un período** (histórico) |
 | `Asignacion` | Objetivo (KPI) asignado a un usuario responsable |
 
@@ -179,8 +180,10 @@ BSC-TechPeru/
 | `GET` | `/auth/usuarios` | ADMIN, GERENTE | Lista usuarios |
 | `POST` | `/auth/usuarios` | ADMIN | Crea usuario |
 | `PATCH` | `/auth/usuarios/:id` | ADMIN | Cambia nombre/rol/activo |
+| `GET` | `/empresas` | autenticado | Perfiles de compañía (id, sigla, sector, color, conteos) |
+| `GET` | `/empresas/:id` | autenticado | Detalle de una compañía |
 | `GET` | `/perspectivas` | autenticado | Lista las 4 perspectivas |
-| `GET` | `/kpis` | autenticado | 36 KPIs evaluados (`?periodo=`, `?perspectiva=`) |
+| `GET` | `/kpis` | autenticado | KPIs evaluados (`?periodo=`, `?perspectiva=`, `?empresa=`) |
 | `GET` | `/kpis/:id` | autenticado | Detalle de un KPI (`?periodo=`) |
 | `GET` | `/kpis/:id/mediciones` | autenticado | Histórico de mediciones |
 | `POST` | `/kpis/:id/mediciones` | ADMIN, GERENTE, ANALISTA | Registra medición de un período |
@@ -195,6 +198,8 @@ BSC-TechPeru/
 | `POST` | `/asignaciones` | ADMIN, GERENTE | Asigna un objetivo |
 | `DELETE` | `/asignaciones/:id` | ADMIN, GERENTE | Quita asignación |
 | `GET` | `/reportes` | autenticado | Reporte dinámico (`?perspectiva=&periodo=&usuario=`) |
+
+> **Multi-compañía:** los listados del BSC (`/kpis`, `/resumen`, `/reportes`, `/periodos`, `/objetivos`, `/mapa`, `/indicadores/diccionario`, `/versiones`, `/comparacion`, `/alertas`, `/desviaciones`, `/evidencias`, `/compromisos`, `/calendario`, `/aprobaciones`, `/asignaciones`, `/iniciativas`) aceptan `?empresa=<id>` y filtran por compañía. El frontend envía ese parámetro automáticamente en cada petición según la compañía activa.
 
 Ejemplo de `/resumen` (período Q4):
 
@@ -216,12 +221,13 @@ Ejemplo de `/resumen` (período Q4):
 ## 4. Funcionalidades de la demo
 
 1. **Login con roles** — autenticación JWT y control de acceso por rol (ADMIN, GERENTE, ANALISTA, RESPONSABLE).
-2. **Dashboard ejecutivo** — índice global, donut de semáforo (✅/⚠️/❌), radar por perspectiva, tarjetas resumen y gráfico Meta vs Real de los 36 KPIs.
-3. **Vistas de perspectiva** — Financiera, Clientes, Procesos y Aprendizaje, agrupadas por objetivo estratégico.
-4. **Trabajo por períodos** — selector de período (2025-Q1…Q4); los KPIs muestran los valores de ese período y permiten registrar `meta`/`real` con histórico de mediciones.
-5. **Simulador de escenarios** ⚡ — desliza el valor `Real` de cualquier KPI y observa cómo se recalcula **en vivo** el índice global (persistido en PostgreSQL).
-6. **Reportes dinámicos** — filtra por perspectiva, período y responsable; tabla con semáforo, KPIs críticos resaltados y exportación a **CSV** e **impresión**.
-7. **Administración** — gestión de usuarios/roles y **asignación de objetivos (KPIs)** a responsables.
+2. **Perfiles de compañía** — conmutador en el panel lateral para cambiar entre **TechPeru SAC**, **Nova Retail SAC** y **Andes Salud**; cada compañía tiene sus propios períodos, objetivos, KPIs, mediciones, alertas y versiones del plan. El cambio reinicia el período, recarga todos los datos y actualiza encabezado, pie y reportes.
+3. **Dashboard ejecutivo** — índice global, donut de semáforo (✅/⚠️/❌), radar por perspectiva, tarjetas resumen y gráfico Meta vs Real de los KPIs de la compañía activa.
+4. **Vistas de perspectiva** — Financiera, Clientes, Procesos y Aprendizaje, agrupadas por objetivo estratégico.
+5. **Trabajo por períodos** — selector de período por compañía (TechPeru: 2025-Q1…Q4; Nova Retail y Andes Salud: 2026-Q1…Q4); los KPIs muestran los valores de ese período y permiten registrar `meta`/`real` con histórico de mediciones.
+6. **Simulador de escenarios** ⚡ — desliza el valor `Real` de cualquier KPI y observa cómo se recalcula **en vivo** el índice global (persistido en PostgreSQL).
+7. **Reportes dinámicos** — filtra por perspectiva, período y responsable; tabla con semáforo, KPIs críticos resaltados y exportación a **CSV** e **impresión**.
+8. **Administración** — gestión de usuarios/roles y **asignación de objetivos (KPIs)** a responsables.
 
 ### Usuarios de demostración
 
@@ -232,7 +238,7 @@ Ejemplo de `/resumen` (período Q4):
 | `analista@techperu.pe` | `analista123` | ANALISTA |
 | `responsable@techperu.pe` | `responsable123` | RESPONSABLE |
 
-> El seed también crea los períodos `2025-Q1`…`2025-Q4` (Q4 activo), mediciones base para Q4 y algunas asignaciones al usuario RESPONSABLE.
+> El seed crea tres compañías (`techperu`, `nova-retail`, `andes-salud`) con sus períodos (TechPeru 2025-Q1…Q4; Nova Retail y Andes Salud 2026-Q1…Q4, Q4 activo), objetivos, KPIs, mediciones base, alertas e iniciativas. El seed de datos fuente vive en `backend/prisma/seed-empresas.mjs`.
 
 ---
 

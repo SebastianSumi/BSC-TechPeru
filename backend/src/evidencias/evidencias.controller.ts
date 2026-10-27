@@ -23,13 +23,18 @@ export class EvidenciasController {
     @Query('kpi') kpiId?: string,
     @Query('medicion') medicionId?: string,
     @Query('desviacion') desviacionId?: string,
+    @Query('empresa') empresaId?: string,
   ) {
-    return this.evidencias.listar({ kpiId, medicionId, desviacionId });
+    return this.evidencias.listar({ kpiId, medicionId, desviacionId, empresaId });
   }
 
   @Post()
-  crear(@Body() dto: CreateEvidenciaDto, @CurrentUser() user: { id: string }) {
-    return this.evidencias.crear(dto, user.id);
+  crear(
+    @Body() dto: CreateEvidenciaDto,
+    @CurrentUser() user: { id: string },
+    @Query('empresa') empresaId?: string,
+  ) {
+    return this.evidencias.crear(dto, user.id, empresaId);
   }
 
   @Delete(':id')

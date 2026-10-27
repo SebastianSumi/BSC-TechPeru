@@ -14,9 +14,12 @@ export class AprobacionesService {
     private readonly auditoria: AuditoriaService,
   ) {}
 
-  pendientes() {
+  pendientes(empresaId?: string) {
     return this.prisma.medicion.findMany({
-      where: { estadoAprobacion: { in: ['BORRADOR', 'PENDIENTE'] } },
+      where: {
+        estadoAprobacion: { in: ['BORRADOR', 'PENDIENTE'] },
+        ...(empresaId ? { kpi: { empresaId } } : {}),
+      },
       include: {
         kpi: { select: { id: true, nombre: true, objetivo: true } },
         periodo: { select: { id: true, nombre: true } },

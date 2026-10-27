@@ -14,12 +14,14 @@ export class EvidenciasService {
     kpiId?: string;
     medicionId?: string;
     desviacionId?: string;
+    empresaId?: string;
   } = {}) {
     return this.prisma.evidencia.findMany({
       where: {
         ...(filtros.kpiId ? { kpiId: filtros.kpiId } : {}),
         ...(filtros.medicionId ? { medicionId: filtros.medicionId } : {}),
         ...(filtros.desviacionId ? { desviacionId: filtros.desviacionId } : {}),
+        ...(filtros.empresaId ? { empresaId: filtros.empresaId } : {}),
       },
       include: {
         subidoPor: { select: { id: true, nombre: true } },
@@ -29,9 +31,13 @@ export class EvidenciasService {
     });
   }
 
-  async crear(dto: CreateEvidenciaDto, usuarioId?: string) {
+  async crear(
+    dto: CreateEvidenciaDto,
+    usuarioId?: string,
+    empresaId = 'techperu',
+  ) {
     const evidencia = await this.prisma.evidencia.create({
-      data: { ...dto, subidoPorId: usuarioId },
+      data: { ...dto, empresaId, subidoPorId: usuarioId },
     });
     await this.auditoria.registrar({
       usuarioId,

@@ -37,10 +37,15 @@ export class IndicadoresService {
     return 'critico';
   }
 
-  async diccionario(perspectivaId?: string, periodoId?: string) {
+  async diccionario(
+    perspectivaId?: string,
+    periodoId?: string,
+    empresaId?: string,
+  ) {
     const kpis = await this.prisma.kpi.findMany({
       where: {
         ...(perspectivaId ? { perspectivaId } : {}),
+        ...(empresaId ? { empresaId } : {}),
         activo: true,
       },
       include: {
@@ -83,7 +88,11 @@ export class IndicadoresService {
     return kpi;
   }
 
-  async crear(dto: CreateIndicadorDto, usuarioId?: string) {
+  async crear(
+    dto: CreateIndicadorDto,
+    usuarioId?: string,
+    empresaId = 'techperu',
+  ) {
     const existe = await this.prisma.kpi.findUnique({ where: { id: dto.id } });
     if (existe) throw new BadRequestException('El código de indicador ya existe');
     const perspectiva = await this.prisma.perspectiva.findUnique({
@@ -94,6 +103,7 @@ export class IndicadoresService {
     const kpi = await this.prisma.kpi.create({
       data: {
         id: dto.id,
+        empresaId,
         perspectivaId: dto.perspectivaId,
         objetivoId: dto.objetivoId,
         objetivo: dto.objetivo,

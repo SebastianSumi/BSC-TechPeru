@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { VersionesService } from './versiones.service.js';
@@ -20,8 +21,8 @@ export class VersionesController {
   constructor(private readonly versiones: VersionesService) {}
 
   @Get()
-  listar() {
-    return this.versiones.listar();
+  listar(@Query('empresa') empresaId?: string) {
+    return this.versiones.listar(empresaId);
   }
 
   @Get(':id')
@@ -31,8 +32,12 @@ export class VersionesController {
 
   @Post()
   @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
-  crear(@Body() dto: CreateVersionDto, @CurrentUser() user: { id: string }) {
-    return this.versiones.crear(dto, user.id);
+  crear(
+    @Body() dto: CreateVersionDto,
+    @CurrentUser() user: { id: string },
+    @Query('empresa') empresaId?: string,
+  ) {
+    return this.versiones.crear(dto, user.id, empresaId);
   }
 
   @Patch(':id/publicar')

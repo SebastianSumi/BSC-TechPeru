@@ -24,19 +24,25 @@ export class AlertasController {
   listar(
     @Query('estado') estado?: string,
     @Query('destinatario') destinatarioId?: string,
+    @Query('empresa') empresaId?: string,
     @CurrentUser() user?: { id: string; rol: RolNombre },
   ) {
     const esResponsable = user?.rol === RolNombre.RESPONSABLE;
     return this.alertas.listar({
       estado,
       destinatarioId: esResponsable ? user!.id : destinatarioId,
+      empresaId,
     });
   }
 
   @Post()
   @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
-  crear(@Body() dto: CreateAlertaDto, @CurrentUser() user: { id: string }) {
-    return this.alertas.crear(dto, user.id);
+  crear(
+    @Body() dto: CreateAlertaDto,
+    @CurrentUser() user: { id: string },
+    @Query('empresa') empresaId?: string,
+  ) {
+    return this.alertas.crear(dto, user.id, empresaId);
   }
 
   @Post('generar')

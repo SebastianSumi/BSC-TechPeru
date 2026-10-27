@@ -10,13 +10,18 @@ export class AlertasService {
     private readonly auditoria: AuditoriaService,
   ) {}
 
-  listar(filtros: { estado?: string; destinatarioId?: string } = {}) {
+  listar(filtros: {
+    estado?: string;
+    destinatarioId?: string;
+    empresaId?: string;
+  } = {}) {
     return this.prisma.alerta.findMany({
       where: {
         ...(filtros.estado ? { estado: filtros.estado as never } : {}),
         ...(filtros.destinatarioId
           ? { destinatarioId: filtros.destinatarioId }
           : {}),
+        ...(filtros.empresaId ? { empresaId: filtros.empresaId } : {}),
       },
       include: {
         kpi: { select: { id: true, nombre: true } },
@@ -26,9 +31,22 @@ export class AlertasService {
     });
   }
 
-  async crear(dto: CreateAlertaDto, usuarioId?: string) {
+  async crear(
+    dto: CreateAlertaDto,
+    usuarioId?: string,
+    empresaId = 'techperu',
+  ) {
+    let empresa = empresaId;
+    if (dto.kpiId) {
+      const kpi = await this.prisma.kpi.findUnique({
+        where: { id: dto.kpiId },
+        select: { empresaId: true },
+      });
+      if (kpi) empresa = kpi.empresaId;
+    }
     const alerta = await this.prisma.alerta.create({
       data: {
+        empresaId: empresa,
         kpiId: dto.kpiId,
         tipo: dto.tipo ?? 'MANUAL',
         severidad: (dto.severidad ?? 'ADVERTENCIA') as never,
@@ -71,8 +89,14 @@ export class AlertasService {
     });
     if (config && !config.notificarCriticos) return { generadas: 0 };
 
+    const periodo = await this.prisma.periodo.findUnique({
+      where: { id: periodoId },
+      select: { empresaId: true },
+    });
+    const empresaId = periodo?.empresaId ?? 'techperu';
+
     const kpis = await this.prisma.kpi.findMany({
-      where: { activo: true },
+      where: { activo: true, empresaId },
       include: { mediciones: { where: { periodoId } } },
     });
 
@@ -98,6 +122,7 @@ export class AlertasService {
 
       await this.prisma.alerta.create({
         data: {
+          empresaId,
           kpiId: k.id,
           tipo: 'KPI_CRITICO',
           severidad: cumplimiento < 60 ? 'CRITICA' : 'ADVERTENCIA',

@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AprobacionesService } from './aprobaciones.service.js';
@@ -20,8 +21,8 @@ export class AprobacionesController {
 
   @Get('pendientes')
   @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
-  pendientes() {
-    return this.aprobaciones.pendientes();
+  pendientes(@Query('empresa') empresaId?: string) {
+    return this.aprobaciones.pendientes(empresaId);
   }
 
   @Get('historial/:medicionId')

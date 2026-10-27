@@ -7,6 +7,7 @@ import {
   RELACIONES_CAUSALES,
   FRECUENCIA_POR_PERSPECTIVA,
 } from './seed-data.mjs';
+import { EMPRESAS, EMPRESA_DATA } from './seed-empresas.mjs';
 
 const prisma = new PrismaClient();
 
@@ -55,6 +56,16 @@ function fuenteDe(kpi) {
 }
 
 async function main() {
+  // Empresas / perfiles organizacionales
+  for (const e of EMPRESAS) {
+    const { id, ...resto } = e;
+    await prisma.empresa.upsert({
+      where: { id },
+      update: resto,
+      create: e,
+    });
+  }
+
   for (const r of ROLES) {
     await prisma.rol.upsert({
       where: { nombre: r.nombre },
@@ -76,8 +87,8 @@ async function main() {
   for (const o of OBJETIVOS) {
     const obj = await prisma.objetivo.upsert({
       where: { codigo: o.codigo },
-      update: o,
-      create: o,
+      update: { ...o, empresaId: 'techperu' },
+      create: { ...o, empresaId: 'techperu' },
     });
     objetivoPorCodigo[o.codigo] = obj;
   }
@@ -88,6 +99,7 @@ async function main() {
     const objetivoRef = objetivoPorCodigo[prefijo];
     const data = {
       id: k.id,
+      empresaId: 'techperu',
       perspectivaId: k.perspectivaId,
       objetivoId: objetivoRef?.id ?? null,
       objetivo: k.objetivo,
@@ -145,9 +157,9 @@ async function main() {
   for (const p of PERIODOS) {
     const { fechaInicio, fechaFin } = fechas(p.anio, p.trimestre);
     const periodo = await prisma.periodo.upsert({
-      where: { nombre: p.nombre },
+      where: { empresaId_nombre: { empresaId: 'techperu', nombre: p.nombre } },
       update: { activo: p.activo, fechaInicio, fechaFin },
-      create: { ...p, fechaInicio, fechaFin },
+      create: { ...p, empresaId: 'techperu', fechaInicio, fechaFin },
     });
     periodoPorNombre[p.nombre] = periodo;
   }
@@ -244,6 +256,7 @@ async function main() {
     for (const a of ALERTAS) {
       await prisma.alerta.create({
         data: {
+          empresaId: 'techperu',
           kpiId: a.kpiId,
           tipo: 'KPI_CRITICO',
           severidad: a.severidad,
@@ -324,6 +337,7 @@ async function main() {
   if (verExistente === 0) {
     await prisma.planVersion.create({
       data: {
+        empresaId: 'techperu',
         version: 'v1.0',
         descripcion: 'Plan estratégico TechPeru 2025 - versión inicial.',
         periodoId: q4.id,
@@ -341,7 +355,7 @@ async function main() {
     update: {},
     create: {
       id: 'global',
-      empresa: 'TechPeru SAC',
+      empresa: 'BSC Suite',
       anioBase: 2025,
       umbralCumplido: 90,
       umbralAlerta: 75,
@@ -360,6 +374,7 @@ async function main() {
     if (medCac) {
       await prisma.evidencia.create({
         data: {
+          empresaId: 'techperu',
           medicionId: medCac.id,
           kpiId: 'F3.2',
           tipo: 'ENLACE',
@@ -372,8 +387,195 @@ async function main() {
     }
   }
 
+
+  // ── Datos de las demás empresas ──────────────────────────────────────────
+  const FACTOR_HISTORICO = [0.86, 0.91, 0.96];
+  for (const [empresaId, data] of Object.entries(EMPRESA_DATA)) {
+    const periodoPorTrimestre = [];
+    for (let t = 1; t <= 4; t += 1) {
+      const { fechaInicio, fechaFin } = fechas(data.anio, t);
+      const periodo = await prisma.periodo.upsert({
+        where: { empresaId_nombre: { empresaId, nombre: `${data.anio}-Q${t}` } },
+        update: { activo: t === 4, fechaInicio, fechaFin },
+        create: {
+          empresaId,
+          nombre: `${data.anio}-Q${t}`,
+          anio: data.anio,
+          trimestre: t,
+          activo: t === 4,
+          fechaInicio,
+          fechaFin,
+        },
+      });
+      periodoPorTrimestre.push(periodo);
+    }
+
+    const objetivosEmpresa = {};
+    for (const o of data.objetivos) {
+      const objetivo = await prisma.objetivo.upsert({
+        where: { codigo: o.codigo },
+        update: { ...o, empresaId },
+        create: { ...o, empresaId, descripcion: `${o.nombre} (${empresaId})` },
+      });
+      objetivosEmpresa[o.codigo] = objetivo;
+    }
+
+    const kpisEmpresa = [];
+    for (const k of data.kpis) {
+      const objetivoRef = objetivosEmpresa[k.objetivo];
+      const kpiData = {
+        id: k.id,
+        empresaId,
+        perspectivaId: k.perspectivaId,
+        objetivoId: objetivoRef?.id ?? null,
+        objetivo: `${k.objetivo}: ${objetivoRef?.nombre ?? ''}`,
+        nombre: k.nombre,
+        unidad: k.unidad,
+        meta: k.meta,
+        real: k.real,
+        inverso: Boolean(k.inverso),
+        tipo: k.inverso ? 'MENOR_MEJOR' : 'MAYOR_MEJOR',
+        frecuencia: FRECUENCIA_POR_PERSPECTIVA[k.perspectivaId] ?? 'TRIMESTRAL',
+        formula: formulaDe(k),
+        fuenteDatos: fuenteDe(k),
+        responsableValidacion: 'Analista BSC',
+        umbralCumplido: 90,
+        umbralAlerta: 75,
+        accion: k.accion,
+        orden: 1,
+        activo: true,
+        ponderacion: 0,
+      };
+      await prisma.kpi.upsert({
+        where: { id: k.id },
+        update: kpiData,
+        create: kpiData,
+      });
+      kpisEmpresa.push(k);
+    }
+
+    // Mediciones del período activo e históricas
+    const periodoActivo = periodoPorTrimestre[3];
+    for (const k of kpisEmpresa) {
+      await prisma.medicion.upsert({
+        where: { kpiId_periodoId: { kpiId: k.id, periodoId: periodoActivo.id } },
+        update: { meta: k.meta, real: k.real, estadoAprobacion: 'APROBADA', registradoPorId: analista.id },
+        create: {
+          kpiId: k.id,
+          periodoId: periodoActivo.id,
+          meta: k.meta,
+          real: k.real,
+          estadoAprobacion: 'APROBADA',
+          registradoPorId: analista.id,
+        },
+      });
+      FACTOR_HISTORICO.forEach((factor, idx) => {
+        const periodo = periodoPorTrimestre[idx];
+        const realHist = Math.round(k.real * factor * 100) / 100;
+        prisma.medicion.upsert({
+          where: { kpiId_periodoId: { kpiId: k.id, periodoId: periodo.id } },
+          update: { meta: k.meta, real: realHist, estadoAprobacion: 'APROBADA', registradoPorId: analista.id },
+          create: {
+            kpiId: k.id,
+            periodoId: periodo.id,
+            meta: k.meta,
+            real: realHist,
+            estadoAprobacion: 'APROBADA',
+            registradoPorId: analista.id,
+          },
+        });
+      });
+    }
+
+    // Relaciones causales Aprendizaje → Procesos → Clientes → Financiera
+    const cadena = [
+      { causa: 'A1', efecto: 'P1', descripcion: 'El talento impulsa la excelencia de los procesos.' },
+      { causa: 'P1', efecto: 'C1', descripcion: 'Los procesos de calidad elevan la experiencia del cliente.' },
+      { causa: 'C1', efecto: 'F1', descripcion: 'La satisfacción del cliente sostiene la rentabilidad.' },
+      { causa: 'A3', efecto: 'P3', descripcion: 'Las capacidades digitales habilitan la innovación.' },
+      { causa: 'P3', efecto: 'C3', descripcion: 'La innovación amplía la cobertura de clientes.' },
+    ];
+    for (const rc of cadena) {
+      const causa = objetivosEmpresa[`${empresaId.startsWith('nova') ? 'NR' : 'AS'}-${rc.causa}`];
+      const efecto = objetivosEmpresa[`${empresaId.startsWith('nova') ? 'NR' : 'AS'}-${rc.efecto}`];
+      if (!causa || !efecto) continue;
+      await prisma.relacionCausal.upsert({
+        where: { causaId_efectoId: { causaId: causa.id, efectoId: efecto.id } },
+        update: { descripcion: rc.descripcion },
+        create: { causaId: causa.id, efectoId: efecto.id, descripcion: rc.descripcion },
+      });
+    }
+
+    // Iniciativas estratégicas de ejemplo
+    const prefijo = empresaId.startsWith('nova') ? 'NR' : 'AS';
+    const iniciativasEmpresa = [
+      { codigo: `${prefijo}-INI-01`, nombre: 'Programa de eficiencia operativa', objetivo: `${prefijo}-P1`, avance: 48, estado: 'EN_CURSO', presupuesto: 160000 },
+      { codigo: `${prefijo}-INI-02`, nombre: 'Plan de experiencia del cliente', objetivo: `${prefijo}-C1`, avance: 62, estado: 'EN_CURSO', presupuesto: 90000 },
+      { codigo: `${prefijo}-INI-03`, nombre: 'Desarrollo de capacidades internas', objetivo: `${prefijo}-A1`, avance: 35, estado: 'EN_RIESGO', presupuesto: 55000 },
+    ];
+    for (const ini of iniciativasEmpresa) {
+      const objetivo = objetivosEmpresa[ini.objetivo];
+      if (!objetivo) continue;
+      await prisma.iniciativa.upsert({
+        where: { codigo: ini.codigo },
+        update: { nombre: ini.nombre, avance: ini.avance, estado: ini.estado, presupuesto: ini.presupuesto, responsableId: gerente.id },
+        create: {
+          codigo: ini.codigo,
+          nombre: ini.nombre,
+          descripcion: '',
+          objetivoId: objetivo.id,
+          responsableId: gerente.id,
+          presupuesto: ini.presupuesto,
+          avance: ini.avance,
+          estado: ini.estado,
+        },
+      });
+    }
+
+    // Alerta del KPI con menor cumplimiento
+    const peor = [...kpisEmpresa].sort((a, b) => {
+      const ca = a.inverso ? a.meta / a.real : a.real / a.meta;
+      const cb = b.inverso ? b.meta / b.real : b.real / b.meta;
+      return ca - cb;
+    })[0];
+    if (peor) {
+      const existente = await prisma.alerta.count({ where: { empresaId, kpiId: peor.id } });
+      if (existente === 0) {
+        const cumplimiento = peor.inverso ? (peor.meta / peor.real) * 100 : (peor.real / peor.meta) * 100;
+        await prisma.alerta.create({
+          data: {
+            empresaId,
+            kpiId: peor.id,
+            tipo: 'KPI_CRITICO',
+            severidad: cumplimiento < 75 ? 'CRITICA' : 'ADVERTENCIA',
+            mensaje: `${peor.nombre}: ${peor.real}${peor.unidad} frente a la meta ${peor.meta}${peor.unidad}.`,
+            estado: 'NUEVA',
+            destinatarioId: resp.id,
+          },
+        });
+      }
+    }
+
+    // Versión vigente del plan
+    const versionExistente = await prisma.planVersion.findFirst({ where: { empresaId } });
+    if (!versionExistente) {
+      await prisma.planVersion.create({
+        data: {
+          empresaId,
+          version: `${prefijo}-v1.0`,
+          descripcion: `Plan estratégico ${data.anio} - ${empresaId}.`,
+          periodoId: periodoActivo.id,
+          estado: 'VIGENTE',
+          publicadoPor: 'Gerente General',
+          vigenteDesde: new Date(),
+          snapshot: { perspectivas: 4, objetivos: data.objetivos.length, kpis: data.kpis.length },
+        },
+      });
+    }
+  }
+
   console.log(
-    `Seed OK: ${ROLES.length} roles, ${PERSPECTIVAS.length} perspectivas, ${OBJETIVOS.length} objetivos, ${KPIS.length} KPIs, ${USUARIOS.length} usuarios, ${PERIODOS.length} períodos, ${INICIATIVAS.length} iniciativas`,
+    `Seed OK: ${ROLES.length} roles, ${PERSPECTIVAS.length} perspectivas, ${OBJETIVOS.length} objetivos, ${KPIS.length} KPIs, ${USUARIOS.length} usuarios, ${PERIODOS.length} períodos, ${EMPRESAS.length} empresas`,
   );
 }
 

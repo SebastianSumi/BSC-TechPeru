@@ -18,23 +18,43 @@ function mapLocal(): Kpi[] {
   }))
 }
 
-export function useBsc(periodoId?: string | null) {
-  const [kpis, setKpis] = useState<Kpi[]>(() => mapLocal())
+const RESUMEN_VACIO: ResumenApi = {
+  indiceGlobal: 0,
+  logrado: 0,
+  riesgo: 0,
+  critico: 0,
+  total: 0,
+  porPerspectiva: [],
+}
+
+export type FuenteDatos = 'local' | 'api' | 'sin-datos'
+
+export function useBsc(periodoId?: string | null, empresaId?: string) {
+  const esDemoLocal = !empresaId || empresaId === 'techperu'
+  const [kpis, setKpis] = useState<Kpi[]>(() => (esDemoLocal ? mapLocal() : []))
   const [resumenApi, setResumenApi] = useState<ResumenApi | null>(null)
-  const [source, setSource] = useState<'local' | 'api'>('local')
+  const [source, setSource] = useState<FuenteDatos>('local')
 
   const cargar = useCallback(() => {
     const pid = periodoId ?? undefined
+    const local = !empresaId || empresaId === 'techperu'
     Promise.all([api.listarKpis(pid), api.resumen(pid)])
       .then(([ks, rs]) => {
-        if (Array.isArray(ks) && ks.length > 0) {
+        if (!Array.isArray(ks)) return
+        if (ks.length > 0) {
           setKpis(ks)
           setResumenApi(rs)
           setSource('api')
+        } else if (!local) {
+          setKpis([])
+          setResumenApi(RESUMEN_VACIO)
+          setSource('api')
+        } else {
+          setSource('local')
         }
       })
-      .catch(() => setSource('local'))
-  }, [periodoId])
+      .catch(() => setSource(local ? 'local' : 'sin-datos'))
+  }, [periodoId, empresaId])
 
   useEffect(() => {
     cargar()

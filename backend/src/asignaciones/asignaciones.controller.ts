@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AsignacionesService } from './asignaciones.service.js';
@@ -21,13 +22,16 @@ export class AsignacionesController {
 
   @Get()
   @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
-  listar() {
-    return this.asignaciones.listar();
+  listar(@Query('empresa') empresaId?: string) {
+    return this.asignaciones.listar(empresaId);
   }
 
   @Get('mias')
-  mias(@CurrentUser() user: { id: string }) {
-    return this.asignaciones.porUsuario(user.id);
+  mias(
+    @CurrentUser() user: { id: string },
+    @Query('empresa') empresaId?: string,
+  ) {
+    return this.asignaciones.porUsuario(user.id, empresaId);
   }
 
   @Post()

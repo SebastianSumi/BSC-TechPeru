@@ -7,6 +7,7 @@ import type {
   Compromiso,
   Config,
   Desviacion,
+  Empresa,
   EventoCalendario,
   Evidencia,
   Iniciativa,
@@ -26,6 +27,22 @@ const API_URL =
   import.meta.env.VITE_API_URL ||
   `${window.location.protocol}//${window.location.hostname}:3000`
 const TOKEN_KEY = 'bsc_token'
+const EMPRESA_KEY = 'bsc_empresa'
+export const EMPRESA_DEFECTO = 'techperu'
+
+export function getEmpresaActiva(): string {
+  return localStorage.getItem(EMPRESA_KEY) || EMPRESA_DEFECTO
+}
+
+export function setEmpresaActiva(id: string) {
+  localStorage.setItem(EMPRESA_KEY, id)
+}
+
+function conEmpresa(path: string) {
+  if (path.startsWith('/empresas') || path.startsWith('/auth')) return path
+  const sep = path.includes('?') ? '&' : '?'
+  return `${path}${sep}empresa=${encodeURIComponent(getEmpresaActiva())}`
+}
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
@@ -38,7 +55,7 @@ export function setToken(token: string | null) {
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken()
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${API_URL}${conEmpresa(path)}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -58,6 +75,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  listarEmpresas: () => request<Empresa[]>('/empresas'),
+
+  obtenerEmpresa: (id: string) => request<Empresa>(`/empresas/${id}`),
+
   login: (email: string, password: string) =>
     request<{ accessToken: string; usuario: Usuario }>('/auth/login', {
       method: 'POST',

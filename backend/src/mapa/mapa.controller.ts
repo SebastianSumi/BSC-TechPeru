@@ -21,8 +21,11 @@ export class MapaController {
   constructor(private readonly mapa: MapaService) {}
 
   @Get()
-  obtener(@Query('periodo') periodoId?: string) {
-    return this.mapa.obtener(periodoId);
+  obtener(
+    @Query('periodo') periodoId?: string,
+    @Query('empresa') empresaId?: string,
+  ) {
+    return this.mapa.obtener(periodoId, empresaId);
   }
 
   @Post('relaciones')

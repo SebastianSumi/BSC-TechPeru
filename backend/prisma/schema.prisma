@@ -69,251 +69,295 @@ enum EstadoVersion {
   ARCHIVADA
 }
 
+model Empresa {
+  id          String        @id @default(cuid())
+  nombre      String        @unique
+  sigla       String
+  sector      String        @default("")
+  color       String        @default("#2563eb")
+  descripcion String        @default("")
+  activo      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  periodos    Periodo[]
+  objetivos   Objetivo[]
+  kpis        Kpi[]
+  versiones   PlanVersion[]
+  alertas     Alerta[]
+  evidencias  Evidencia[]
+}
+
 model Rol {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   nombre      RolNombre @unique
   descripcion String
   usuarios    Usuario[]
 }
 
 model Usuario {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  nombre        String
-  passwordHash  String
-  rolId         String
-  rol           Rol      @relation(fields: [rolId], references: [id])
-  activo        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  asignaciones  Asignacion[]
-  mediciones    Medicion[]
-  auditorias    Auditoria[]
-  iniciativas   Iniciativa[]   @relation("IniciativaResponsable")
-  alertas       Alerta[]       @relation("AlertaDestinatario")
-  aprobaciones  Aprobacion[]
-  compromisos   Compromiso[]   @relation("CompromisoResponsable")
-  evidencias    Evidencia[]
-  desviaciones  Desviacion[]
-  eventos       EventoCalendario[]
+  id           String             @id @default(cuid())
+  email        String             @unique
+  nombre       String
+  passwordHash String
+  rolId        String
+  rol          Rol                @relation(fields: [rolId], references: [id])
+  activo       Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  asignaciones Asignacion[]
+  mediciones   Medicion[]
+  auditorias   Auditoria[]
+  iniciativas  Iniciativa[]       @relation("IniciativaResponsable")
+  alertas      Alerta[]           @relation("AlertaDestinatario")
+  aprobaciones Aprobacion[]
+  compromisos  Compromiso[]       @relation("CompromisoResponsable")
+  evidencias   Evidencia[]
+  desviaciones Desviacion[]
+  eventos      EventoCalendario[]
 }
 
 model Perspectiva {
-  id            String     @id
-  nombre        String
-  icono         String
-  color         String
-  orden         Int
-  ponderacion   Float      @default(25)
-  objetivos     Objetivo[]
-  kpis          Kpi[]
+  id          String     @id
+  nombre      String
+  icono       String
+  color       String
+  orden       Int
+  ponderacion Float      @default(25)
+  objetivos   Objetivo[]
+  kpis        Kpi[]
 }
 
 model Objetivo {
-  id            String      @id @default(cuid())
-  codigo        String      @unique
+  id            String           @id @default(cuid())
+  empresaId     String           @default("techperu")
+  empresa       Empresa          @relation(fields: [empresaId], references: [id])
+  codigo        String           @unique
   nombre        String
-  descripcion   String      @default("")
+  descripcion   String           @default("")
   perspectivaId String
-  perspectiva   Perspectiva @relation(fields: [perspectivaId], references: [id])
-  ponderacion   Float       @default(0)
-  activo        Boolean     @default(true)
-  orden         Int         @default(0)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  perspectiva   Perspectiva      @relation(fields: [perspectivaId], references: [id])
+  ponderacion   Float            @default(0)
+  activo        Boolean          @default(true)
+  orden         Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   kpis          Kpi[]
   iniciativas   Iniciativa[]
   compromisos   Compromiso[]
   causas        RelacionCausal[] @relation("CausaObjetivo")
   efectos       RelacionCausal[] @relation("EfectoObjetivo")
+
+  @@index([empresaId])
 }
 
 model Kpi {
-  id            String      @id
-  perspectivaId String
-  perspectiva   Perspectiva @relation(fields: [perspectivaId], references: [id])
-  objetivoId    String?
-  objetivoRef   Objetivo?   @relation(fields: [objetivoId], references: [id])
-  objetivo      String
-  nombre        String
-  unidad        String
-  meta          Float
-  real          Float
-  inverso       Boolean     @default(false)
-  tipo          TipoKpi     @default(MAYOR_MEJOR)
-  frecuencia    Frecuencia  @default(TRIMESTRAL)
-  formula       String      @default("")
-  fuenteDatos   String      @default("")
-  responsableValidacion String @default("")
-  umbralCumplido Float      @default(90)
-  umbralAlerta   Float      @default(75)
-  rangoMin       Float?
-  rangoMax       Float?
-  accion        String
-  orden         Int
-  activo        Boolean     @default(true)
-  ponderacion   Float       @default(0)
-  mediciones    Medicion[]
-  asignaciones  Asignacion[]
-  iniciativas   Iniciativa[]
-  alertas       Alerta[]
-  desviaciones  Desviacion[]
-  compromisos   Compromiso[]
-  evidencias    Evidencia[]
+  id                    String       @id
+  empresaId             String       @default("techperu")
+  empresa               Empresa      @relation(fields: [empresaId], references: [id])
+  perspectivaId         String
+  perspectiva           Perspectiva  @relation(fields: [perspectivaId], references: [id])
+  objetivoId            String?
+  objetivoRef           Objetivo?    @relation(fields: [objetivoId], references: [id])
+  objetivo              String
+  nombre                String
+  unidad                String
+  meta                  Float
+  real                  Float
+  inverso               Boolean      @default(false)
+  tipo                  TipoKpi      @default(MAYOR_MEJOR)
+  frecuencia            Frecuencia   @default(TRIMESTRAL)
+  formula               String       @default("")
+  fuenteDatos           String       @default("")
+  responsableValidacion String       @default("")
+  umbralCumplido        Float        @default(90)
+  umbralAlerta          Float        @default(75)
+  rangoMin              Float?
+  rangoMax              Float?
+  accion                String
+  orden                 Int
+  activo                Boolean      @default(true)
+  ponderacion           Float        @default(0)
+  mediciones            Medicion[]
+  asignaciones          Asignacion[]
+  iniciativas           Iniciativa[]
+  alertas               Alerta[]
+  desviaciones          Desviacion[]
+  compromisos           Compromiso[]
+  evidencias            Evidencia[]
+
+  @@index([empresaId])
 }
 
 model Periodo {
-  id          String   @id @default(cuid())
-  nombre      String   @unique
+  id          String             @id @default(cuid())
+  empresaId   String             @default("techperu")
+  empresa     Empresa            @relation(fields: [empresaId], references: [id])
+  nombre      String
   anio        Int
   trimestre   Int
   fechaInicio DateTime
   fechaFin    DateTime
-  activo      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  activo      Boolean            @default(false)
+  createdAt   DateTime           @default(now())
   mediciones  Medicion[]
   eventos     EventoCalendario[]
   versiones   PlanVersion[]
+
+  @@unique([empresaId, nombre])
+  @@index([empresaId])
 }
 
 model Asignacion {
-  id          String   @id @default(cuid())
-  usuarioId   String
-  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
-  kpiId       String
-  kpi         Kpi      @relation(fields: [kpiId], references: [id])
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  kpiId     String
+  kpi       Kpi      @relation(fields: [kpiId], references: [id])
+  createdAt DateTime @default(now())
+
   @@unique([usuarioId, kpiId])
 }
 
 model Medicion {
-  id          String   @id @default(cuid())
-  kpiId       String
-  kpi         Kpi      @relation(fields: [kpiId], references: [id])
-  periodoId   String
-  periodo     Periodo  @relation(fields: [periodoId], references: [id])
-  meta        Float
-  real        Float
-  nota        String?
+  id               String           @id @default(cuid())
+  kpiId            String
+  kpi              Kpi              @relation(fields: [kpiId], references: [id])
+  periodoId        String
+  periodo          Periodo          @relation(fields: [periodoId], references: [id])
+  meta             Float
+  real             Float
+  nota             String?
   estadoAprobacion EstadoAprobacion @default(BORRADOR)
   registradoPorId  String?
-  registradoPor    Usuario? @relation(fields: [registradoPorId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  aprobaciones Aprobacion[]
-  evidencias   Evidencia[]
+  registradoPor    Usuario?         @relation(fields: [registradoPorId], references: [id])
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  aprobaciones     Aprobacion[]
+  evidencias       Evidencia[]
+
   @@unique([kpiId, periodoId])
 }
 
 model Aprobacion {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   medicionId  String?
-  medicion    Medicion? @relation(fields: [medicionId], references: [id])
-  tipo        String    @default("MEDICION")
+  medicion    Medicion?        @relation(fields: [medicionId], references: [id])
+  tipo        String           @default("MEDICION")
   estado      EstadoAprobacion @default(PENDIENTE)
   aprobadorId String?
-  aprobador   Usuario?  @relation(fields: [aprobadorId], references: [id])
-  observacion String    @default("")
-  createdAt   DateTime  @default(now())
+  aprobador   Usuario?         @relation(fields: [aprobadorId], references: [id])
+  observacion String           @default("")
+  createdAt   DateTime         @default(now())
   resueltoEn  DateTime?
 }
 
 model Evidencia {
-  id          String   @id @default(cuid())
-  medicionId  String?
-  medicion    Medicion? @relation(fields: [medicionId], references: [id])
-  kpiId       String?
-  kpi         Kpi?     @relation(fields: [kpiId], references: [id])
+  id           String      @id @default(cuid())
+  empresaId    String      @default("techperu")
+  empresa      Empresa     @relation(fields: [empresaId], references: [id])
+  medicionId   String?
+  medicion     Medicion?   @relation(fields: [medicionId], references: [id])
+  kpiId        String?
+  kpi          Kpi?        @relation(fields: [kpiId], references: [id])
   desviacionId String?
-  desviacion  Desviacion? @relation(fields: [desviacionId], references: [id])
-  tipo        String    @default("ENLACE")
-  titulo      String
-  url         String    @default("")
-  descripcion String    @default("")
-  subidoPorId String?
-  subidoPor   Usuario?  @relation(fields: [subidoPorId], references: [id])
-  createdAt   DateTime  @default(now())
+  desviacion   Desviacion? @relation(fields: [desviacionId], references: [id])
+  tipo         String      @default("ENLACE")
+  titulo       String
+  url          String      @default("")
+  descripcion  String      @default("")
+  subidoPorId  String?
+  subidoPor    Usuario?    @relation(fields: [subidoPorId], references: [id])
+  createdAt    DateTime    @default(now())
+
+  @@index([empresaId])
 }
 
 model Iniciativa {
-  id           String   @id @default(cuid())
-  codigo       String   @unique
-  nombre       String
-  descripcion  String   @default("")
-  objetivoId   String
-  objetivoRef  Objetivo @relation(fields: [objetivoId], references: [id])
-  kpiId        String?
-  kpi          Kpi?     @relation(fields: [kpiId], references: [id])
+  id            String           @id @default(cuid())
+  codigo        String           @unique
+  nombre        String
+  descripcion   String           @default("")
+  objetivoId    String
+  objetivoRef   Objetivo         @relation(fields: [objetivoId], references: [id])
+  kpiId         String?
+  kpi           Kpi?             @relation(fields: [kpiId], references: [id])
   responsableId String?
-  responsable  Usuario? @relation("IniciativaResponsable", fields: [responsableId], references: [id])
-  fechaInicio  DateTime @default(now())
-  fechaFin     DateTime?
-  presupuesto  Float    @default(0)
-  avance       Float    @default(0)
-  estado       EstadoIniciativa @default(PLANIFICADA)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  responsable   Usuario?         @relation("IniciativaResponsable", fields: [responsableId], references: [id])
+  fechaInicio   DateTime         @default(now())
+  fechaFin      DateTime?
+  presupuesto   Float            @default(0)
+  avance        Float            @default(0)
+  estado        EstadoIniciativa @default(PLANIFICADA)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 }
 
 model Alerta {
-  id           String   @id @default(cuid())
-  kpiId        String?
-  kpi          Kpi?     @relation(fields: [kpiId], references: [id])
-  periodoId    String?
-  tipo         String   @default("KPI_CRITICO")
-  severidad    SeveridadAlerta @default(ADVERTENCIA)
-  mensaje      String
-  estado       EstadoAlerta @default(NUEVA)
+  id             String          @id @default(cuid())
+  empresaId      String          @default("techperu")
+  empresa        Empresa         @relation(fields: [empresaId], references: [id])
+  kpiId          String?
+  kpi            Kpi?            @relation(fields: [kpiId], references: [id])
+  periodoId      String?
+  tipo           String          @default("KPI_CRITICO")
+  severidad      SeveridadAlerta @default(ADVERTENCIA)
+  mensaje        String
+  estado         EstadoAlerta    @default(NUEVA)
   destinatarioId String?
-  destinatario Usuario? @relation("AlertaDestinatario", fields: [destinatarioId], references: [id])
-  leida        Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  resueltaEn   DateTime?
+  destinatario   Usuario?        @relation("AlertaDestinatario", fields: [destinatarioId], references: [id])
+  leida          Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  resueltaEn     DateTime?
+
+  @@index([empresaId])
 }
 
 model Desviacion {
-  id            String   @id @default(cuid())
-  kpiId         String
-  kpi           Kpi      @relation(fields: [kpiId], references: [id])
-  periodoId     String?
-  causa         String
-  impacto       String   @default("")
-  medidaCorrectiva String @default("")
-  responsableId String?
-  responsable   Usuario? @relation(fields: [responsableId], references: [id])
-  fechaLimite   DateTime?
-  estado        EstadoCompromiso @default(PENDIENTE)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  evidencias    Evidencia[]
+  id               String           @id @default(cuid())
+  kpiId            String
+  kpi              Kpi              @relation(fields: [kpiId], references: [id])
+  periodoId        String?
+  causa            String
+  impacto          String           @default("")
+  medidaCorrectiva String           @default("")
+  responsableId    String?
+  responsable      Usuario?         @relation(fields: [responsableId], references: [id])
+  fechaLimite      DateTime?
+  estado           EstadoCompromiso @default(PENDIENTE)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  evidencias       Evidencia[]
 }
 
 model Compromiso {
-  id            String   @id @default(cuid())
+  id            String           @id @default(cuid())
   reunion       String
   descripcion   String
   objetivoId    String?
-  objetivoRef   Objetivo? @relation(fields: [objetivoId], references: [id])
+  objetivoRef   Objetivo?        @relation(fields: [objetivoId], references: [id])
   kpiId         String?
-  kpi           Kpi?     @relation(fields: [kpiId], references: [id])
+  kpi           Kpi?             @relation(fields: [kpiId], references: [id])
   responsableId String?
-  responsable   Usuario? @relation("CompromisoResponsable", fields: [responsableId], references: [id])
+  responsable   Usuario?         @relation("CompromisoResponsable", fields: [responsableId], references: [id])
   fechaLimite   DateTime?
   estado        EstadoCompromiso @default(PENDIENTE)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 }
 
 model PlanVersion {
-  id          String   @id @default(cuid())
-  version     String   @unique
-  descripcion String   @default("")
-  periodoId   String?
-  periodo     Periodo? @relation(fields: [periodoId], references: [id])
-  estado      EstadoVersion @default(BORRADOR)
-  snapshot    Json
-  publicadoPor String @default("")
-  createdAt   DateTime @default(now())
+  id           String        @id @default(cuid())
+  empresaId    String        @default("techperu")
+  empresa      Empresa       @relation(fields: [empresaId], references: [id])
+  version      String        @unique
+  descripcion  String        @default("")
+  periodoId    String?
+  periodo      Periodo?      @relation(fields: [periodoId], references: [id])
+  estado       EstadoVersion @default(BORRADOR)
+  snapshot     Json
+  publicadoPor String        @default("")
+  createdAt    DateTime      @default(now())
   vigenteDesde DateTime?
+
+  @@index([empresaId])
 }
 
 model RelacionCausal {
@@ -323,42 +367,43 @@ model RelacionCausal {
   efectoId    String
   efecto      Objetivo @relation("EfectoObjetivo", fields: [efectoId], references: [id])
   descripcion String   @default("")
+
   @@unique([causaId, efectoId])
 }
 
 model EventoCalendario {
-  id          String   @id @default(cuid())
-  titulo      String
-  tipo        String   @default("CIERRE")
-  fecha       DateTime
-  periodoId   String?
-  periodo     Periodo? @relation(fields: [periodoId], references: [id])
+  id            String   @id @default(cuid())
+  titulo        String
+  tipo          String   @default("CIERRE")
+  fecha         DateTime
+  periodoId     String?
+  periodo       Periodo? @relation(fields: [periodoId], references: [id])
   responsableId String?
-  responsable Usuario? @relation(fields: [responsableId], references: [id])
-  completado  Boolean  @default(false)
-  descripcion String   @default("")
-  createdAt   DateTime @default(now())
+  responsable   Usuario? @relation(fields: [responsableId], references: [id])
+  completado    Boolean  @default(false)
+  descripcion   String   @default("")
+  createdAt     DateTime @default(now())
 }
 
 model Auditoria {
-  id         String   @id @default(cuid())
-  usuarioId  String?
-  usuario    Usuario? @relation(fields: [usuarioId], references: [id])
-  accion     String
-  entidad    String
-  entidadId  String   @default("")
-  detalle    Json?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  usuarioId String?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id])
+  accion    String
+  entidad   String
+  entidadId String   @default("")
+  detalle   Json?
+  createdAt DateTime @default(now())
 }
 
 model Config {
-  id             String  @id @default("global")
-  empresa        String  @default("TechPeru SAC")
-  anioBase       Int     @default(2025)
-  umbralCumplido Float   @default(90)
-  umbralAlerta   Float   @default(75)
-  notificarCriticos Boolean @default(true)
-  requiereAprobacion Boolean @default(false)
-  requiereEvidencia  Boolean @default(false)
-  updatedAt      DateTime @updatedAt
+  id                 String   @id @default("global")
+  empresa            String   @default("TechPeru SAC")
+  anioBase           Int      @default(2025)
+  umbralCumplido     Float    @default(90)
+  umbralAlerta       Float    @default(75)
+  notificarCriticos  Boolean  @default(true)
+  requiereAprobacion Boolean  @default(false)
+  requiereEvidencia  Boolean  @default(false)
+  updatedAt          DateTime @updatedAt
 }

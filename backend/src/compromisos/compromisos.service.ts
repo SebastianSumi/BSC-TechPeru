@@ -13,12 +13,19 @@ export class CompromisosService {
     private readonly auditoria: AuditoriaService,
   ) {}
 
-  listar(filtros: { estado?: string; responsableId?: string } = {}) {
+  listar(filtros: {
+    estado?: string;
+    responsableId?: string;
+    empresaId?: string;
+  } = {}) {
     return this.prisma.compromiso.findMany({
       where: {
         ...(filtros.estado ? { estado: filtros.estado as never } : {}),
         ...(filtros.responsableId
           ? { responsableId: filtros.responsableId }
+          : {}),
+        ...(filtros.empresaId
+          ? { objetivoRef: { empresaId: filtros.empresaId } }
           : {}),
       },
       include: {

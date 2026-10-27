@@ -15,16 +15,18 @@ export class MapaService {
   ) {}
 
   /** Devuelve perspectivas, objetivos (con índice de cumplimiento) y relaciones causales. */
-  async obtener(periodoId?: string) {
+  async obtener(periodoId?: string, empresaId?: string) {
     const [perspectivas, objetivos, relaciones, kpis] = await Promise.all([
       this.prisma.perspectiva.findMany({ orderBy: { orden: 'asc' } }),
       this.prisma.objetivo.findMany({
-        where: { activo: true },
+        where: { activo: true, ...(empresaId ? { empresaId } : {}) },
         orderBy: [{ perspectivaId: 'asc' }, { orden: 'asc' }],
       }),
-      this.prisma.relacionCausal.findMany(),
+      this.prisma.relacionCausal.findMany({
+        where: empresaId ? { causa: { empresaId } } : undefined,
+      }),
       this.prisma.kpi.findMany({
-        where: { activo: true },
+        where: { activo: true, ...(empresaId ? { empresaId } : {}) },
         include: periodoId
           ? { mediciones: { where: { periodoId } } }
           : undefined,

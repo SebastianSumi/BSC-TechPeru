@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { PeriodosService } from './periodos.service.js';
@@ -20,19 +21,19 @@ export class PeriodosController {
   constructor(private readonly periodos: PeriodosService) {}
 
   @Get()
-  listar() {
-    return this.periodos.listar();
+  listar(@Query('empresa') empresaId?: string) {
+    return this.periodos.listar(empresaId);
   }
 
   @Get('activo')
-  activo() {
-    return this.periodos.activo();
+  activo(@Query('empresa') empresaId?: string) {
+    return this.periodos.activo(empresaId);
   }
 
   @Post()
   @Roles(RolNombre.ADMIN, RolNombre.GERENTE)
-  crear(@Body() dto: CreatePeriodoDto) {
-    return this.periodos.crear(dto);
+  crear(@Body() dto: CreatePeriodoDto, @Query('empresa') empresaId?: string) {
+    return this.periodos.crear(dto, empresaId);
   }
 
   @Patch(':id')

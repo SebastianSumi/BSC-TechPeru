@@ -29,8 +29,9 @@ export class BscController {
   getKpis(
     @Query('perspectiva') perspectiva?: string,
     @Query('periodo') periodoId?: string,
+    @Query('empresa') empresaId?: string,
   ) {
-    return this.bsc.getKpis(perspectiva, periodoId);
+    return this.bsc.getKpis(perspectiva, periodoId, empresaId);
   }
 
   @Get('kpis/:id')
@@ -50,8 +51,11 @@ export class BscController {
   }
 
   @Get('resumen')
-  getResumen(@Query('periodo') periodoId?: string) {
-    return this.bsc.getResumen(periodoId);
+  getResumen(
+    @Query('periodo') periodoId?: string,
+    @Query('empresa') empresaId?: string,
+  ) {
+    return this.bsc.getResumen(periodoId, empresaId);
   }
 
   @Patch('kpis/:id')
@@ -65,6 +69,7 @@ export class BscController {
     @Query('perspectiva') perspectivaId?: string,
     @Query('periodo') periodoId?: string,
     @Query('usuario') usuarioId?: string,
+    @Query('empresa') empresaId?: string,
     @CurrentUser() user?: { id: string; rol: RolNombre },
   ) {
     const esResponsable = user?.rol === RolNombre.RESPONSABLE;
@@ -72,6 +77,7 @@ export class BscController {
       perspectivaId,
       periodoId,
       usuarioId: esResponsable ? user!.id : usuarioId,
+      empresaId,
     });
   }
 }
