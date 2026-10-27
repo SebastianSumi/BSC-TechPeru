@@ -5,10 +5,10 @@ export function EstadoBadge({ estado, pct }: { estado: Estado; pct?: number }) {
   const m = ESTADO_META[estado]
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap"
-      style={{ background: m.bg, color: m.color, border: `1px solid ${m.color}44` }}
+      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wide"
+      style={{ background: m.bg, color: m.color }}
     >
-      <span>{m.emoji}</span>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: m.color }} />
       {pct !== undefined ? `${pct}%` : m.label}
     </span>
   )

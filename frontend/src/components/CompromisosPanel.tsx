@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Handshake, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Compromiso } from '../data/types'
@@ -25,10 +25,7 @@ export function CompromisosPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <Handshake size={18} className="text-[#22c55e]" /> Seguimiento de Compromisos (RF-16)
-        </h2>
+      <div className="flex items-center justify-end">
         {puedeGestionar && (
           <button
             onClick={() => setMostrar((v) => !v)}

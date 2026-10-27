@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CalendarClock } from 'lucide-react'
+
 import { api } from '../lib/api'
 import type { EventoCalendario, Periodo } from '../data/types'
 
@@ -16,9 +16,6 @@ export function CalendarioPanel({ periodos }: { periodos: Periodo[] }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <CalendarClock size={18} className="text-[#3b82f6]" /> Calendario de Evaluación (RF-21)
-        </h2>
         <select
           value={periodoId}
           onChange={(e) => setPeriodoId(e.target.value)}

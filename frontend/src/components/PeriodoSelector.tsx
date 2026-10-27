@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Calendar, Plus, Check } from 'lucide-react'
+import { Calendar, Check, Plus, X } from 'lucide-react'
 import { api } from '../lib/api'
 import type { Periodo } from '../data/types'
 
@@ -38,17 +38,17 @@ export function PeriodoSelector({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="flex items-center gap-1.5 text-xs text-[var(--muted)]">
-        <Calendar size={14} /> Período
-      </span>
+    <div className="relative flex items-center gap-1.5">
+      <Calendar size={14} className="hidden text-[var(--muted)] sm:block" />
       <select
         value={periodoId}
         onChange={(e) => onCambiar(e.target.value)}
-        className="rounded-lg border px-3 py-1.5 text-sm outline-none"
-        style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
+        title="Período de evaluación"
+        aria-label="Período de evaluación"
+        className="max-w-[150px] rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold outline-none transition focus:border-[#93c5fd]"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text)' }}
       >
-        <option value="">Sin período (base)</option>
+        <option value="">Sin período</option>
         {periodos.map((p) => (
           <option key={p.id} value={p.id}>
             {p.nombre}
@@ -61,10 +61,11 @@ export function PeriodoSelector({
         <button
           onClick={() => activar(periodoId)}
           title="Marcar como período activo"
-          className="rounded-lg border px-2 py-1.5 text-xs transition"
-          style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
+          aria-label="Marcar como período activo"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border transition hover:bg-[var(--surface-2)]"
+          style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--green)' }}
         >
-          <Check size={14} />
+          <Check size={13} />
         </button>
       )}
 
@@ -72,56 +73,59 @@ export function PeriodoSelector({
         <>
           <button
             onClick={() => setMostrarForm((v) => !v)}
-            className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs transition"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
+            title="Nuevo período"
+            aria-label="Nuevo período"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-lg border transition hover:bg-[var(--surface-2)]"
+            style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
           >
-            <Plus size={13} /> Período
+            {mostrarForm ? <X size={13} /> : <Plus size={13} />}
           </button>
+
           {mostrarForm && (
             <div
-              className="flex items-end gap-2 rounded-lg border p-2"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
+              className="absolute right-0 top-10 z-50 w-60 rounded-xl border p-3 shadow-lg"
+              style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
             >
-              <div>
-                <label className="block text-[10px] text-[var(--muted)]">Año</label>
-                <input
-                  type="number"
-                  value={form.anio}
-                  onChange={(e) => setForm({ ...form, anio: Number(e.target.value) })}
-                  className="w-16 rounded border px-2 py-1 text-xs outline-none"
-                  style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                />
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
+                Crear período
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="field-bsc">
+                  <label htmlFor="anio">Año</label>
+                  <input
+                    id="anio"
+                    type="number"
+                    value={form.anio}
+                    onChange={(e) => setForm({ ...form, anio: Number(e.target.value) })}
+                    className="!py-1.5 !text-[11px]"
+                  />
+                </div>
+                <div className="field-bsc">
+                  <label htmlFor="trimestre">Trimestre</label>
+                  <select
+                    id="trimestre"
+                    value={form.trimestre}
+                    onChange={(e) => setForm({ ...form, trimestre: Number(e.target.value) })}
+                    className="!py-1.5 !text-[11px]"
+                  >
+                    {[1, 2, 3, 4].map((t) => (
+                      <option key={t} value={t}>
+                        Q{t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-[10px] text-[var(--muted)]">Trim.</label>
-                <select
-                  value={form.trimestre}
-                  onChange={(e) => setForm({ ...form, trimestre: Number(e.target.value) })}
-                  className="rounded border px-2 py-1 text-xs outline-none"
-                  style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                >
-                  {[1, 2, 3, 4].map((t) => (
-                    <option key={t} value={t}>
-                      Q{t}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                onClick={crear}
-                className="rounded px-2.5 py-1 text-xs font-semibold text-white"
-                style={{ background: '#3b82f6' }}
-              >
-                Crear
+              <button onClick={crear} className="btn-bsc btn-bsc-primary mt-2 w-full !py-1.5">
+                Crear período
               </button>
             </div>
           )}
         </>
       )}
+
       {usuarioRol && (
-        <span className="hidden text-[11px] text-[var(--muted)] sm:inline">
-          · {usuarioRol}
-        </span>
+        <span className="hidden text-[10px] text-[var(--muted)] xl:inline">· {usuarioRol}</span>
       )}
     </div>
   )

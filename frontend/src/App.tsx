@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   Activity,
+  AlertTriangle,
   ArrowLeftRight,
   Bell,
   BookOpen,
@@ -14,13 +15,14 @@ import {
   Handshake,
   LayoutDashboard,
   LogOut,
+  Menu,
   Network,
   Paperclip,
   ScrollText,
   Settings,
-  Shield,
   SlidersHorizontal,
   Target,
+  TrendingUp,
   Upload,
   Users as UsersIcon,
 } from 'lucide-react'
@@ -54,7 +56,7 @@ import { ComparacionPanel } from './components/ComparacionPanel'
 import { ImportPanel } from './components/ImportPanel'
 import { ConfigPanel } from './components/ConfigPanel'
 import { AuditoriaPanel } from './components/AuditoriaPanel'
-import type { KpiEvaluado, Periodo, PerspectivaId } from './data/types'
+import type { KpiEvaluado, Periodo, PerspectivaId, RolNombre } from './data/types'
 
 type Tab =
   | 'dashboard'
@@ -78,6 +80,191 @@ type Tab =
   | 'auditoria'
   | 'admin'
 
+type TabDef = {
+  id: Tab
+  label: string
+  desc: string
+  group: string
+  icon: ReactNode
+  roles?: RolNombre[]
+}
+
+const TABS: TabDef[] = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard ejecutivo',
+    desc: 'Monitorea el desempeño de la estrategia, identifica desviaciones y prioriza acciones.',
+    group: 'Estratégico',
+    icon: <LayoutDashboard size={16} />,
+  },
+  {
+    id: 'mapa',
+    label: 'Mapa estratégico',
+    desc: 'Explora cómo los objetivos se conectan a través de las cuatro perspectivas.',
+    group: 'Estratégico',
+    icon: <Network size={16} />,
+  },
+  {
+    id: 'objetivos',
+    label: 'Objetivos',
+    desc: 'Define resultados prioritarios y alinea cada objetivo con su perspectiva.',
+    group: 'Estratégico',
+    icon: <Target size={16} />,
+  },
+  {
+    id: 'diccionario',
+    label: 'Diccionario KPI',
+    desc: 'Consulta fórmulas, fuentes, metas y criterios de cada indicador.',
+    group: 'Estratégico',
+    icon: <BookOpen size={16} />,
+  },
+  {
+    id: 'iniciativas',
+    label: 'Iniciativas',
+    desc: 'Convierte los objetivos en proyectos con responsables, presupuesto y avance.',
+    group: 'Estratégico',
+    icon: <FolderKanban size={16} />,
+  },
+  {
+    id: 'financiera',
+    label: 'Financiera',
+    desc: 'Perspectiva financiera: rentabilidad, crecimiento y estructura de costos.',
+    group: 'Perspectivas',
+    icon: <span className="text-[14px] leading-none">💰</span>,
+  },
+  {
+    id: 'clientes',
+    label: 'Clientes',
+    desc: 'Perspectiva de clientes: satisfacción, retención y expansión de la base.',
+    group: 'Perspectivas',
+    icon: <span className="text-[14px] leading-none">👥</span>,
+  },
+  {
+    id: 'procesos',
+    label: 'Procesos internos',
+    desc: 'Perspectiva de procesos: calidad, eficiencia operativa e innovación.',
+    group: 'Perspectivas',
+    icon: <span className="text-[14px] leading-none">🔧</span>,
+  },
+  {
+    id: 'aprendizaje',
+    label: 'Aprendizaje y crecimiento',
+    desc: 'Perspectiva de aprendizaje: talento, cultura y capacidades estratégicas.',
+    group: 'Perspectivas',
+    icon: <span className="text-[14px] leading-none">📚</span>,
+  },
+  {
+    id: 'simulador',
+    label: 'Simulador',
+    desc: 'Ajusta resultados reales y observa el impacto en el cumplimiento global.',
+    group: 'Análisis',
+    icon: <SlidersHorizontal size={16} />,
+  },
+  {
+    id: 'reportes',
+    label: 'Reportes',
+    desc: 'Genera resúmenes de desempeño y exporta información para análisis.',
+    group: 'Análisis',
+    icon: <FileBarChart size={16} />,
+  },
+  {
+    id: 'comparacion',
+    label: 'Comparación',
+    desc: 'Compara el desempeño entre períodos e identifica variaciones.',
+    group: 'Análisis',
+    icon: <ArrowLeftRight size={16} />,
+  },
+  {
+    id: 'calendario',
+    label: 'Calendario',
+    desc: 'Programa hitos, revisiones y compromisos del ciclo estratégico.',
+    group: 'Análisis',
+    icon: <CalendarClock size={16} />,
+  },
+  {
+    id: 'alertas',
+    label: 'Alertas',
+    desc: 'Gestiona notificaciones generadas por desviaciones y umbrales.',
+    group: 'Gobierno y control',
+    icon: <Bell size={16} />,
+  },
+  {
+    id: 'desviaciones',
+    label: 'Desviaciones',
+    desc: 'Registra brechas, causas y planes de acción sobre los indicadores.',
+    group: 'Gobierno y control',
+    icon: <FileWarning size={16} />,
+  },
+  {
+    id: 'compromisos',
+    label: 'Compromisos',
+    desc: 'Da seguimiento a compromisos adquiridos y su nivel de cumplimiento.',
+    group: 'Gobierno y control',
+    icon: <Handshake size={16} />,
+  },
+  {
+    id: 'evidencias',
+    label: 'Evidencias',
+    desc: 'Adjunta y consulta los respaldos de cada medición reportada.',
+    group: 'Gobierno y control',
+    icon: <Paperclip size={16} />,
+  },
+  {
+    id: 'aprobaciones',
+    label: 'Aprobaciones',
+    desc: 'Revisa y valida mediciones según el flujo de aprobación definido.',
+    group: 'Gobierno y control',
+    icon: <CheckCircle2 size={16} />,
+  },
+  {
+    id: 'versiones',
+    label: 'Versiones',
+    desc: 'Administra versiones del plan estratégico y su vigencia.',
+    group: 'Gobierno y control',
+    icon: <GitBranch size={16} />,
+  },
+  {
+    id: 'auditoria',
+    label: 'Auditoría',
+    desc: 'Consulta el historial de acciones y cambios realizados en el sistema.',
+    group: 'Gobierno y control',
+    icon: <ScrollText size={16} />,
+  },
+  {
+    id: 'importacion',
+    label: 'Importar datos',
+    desc: 'Carga mediciones y estructura desde archivos externos.',
+    group: 'Sistema',
+    icon: <Upload size={16} />,
+  },
+  {
+    id: 'config',
+    label: 'Configuración',
+    desc: 'Ajusta parámetros de evaluación, umbrales y preferencias del BSC.',
+    group: 'Sistema',
+    icon: <Settings size={16} />,
+  },
+  {
+    id: 'admin',
+    label: 'Administración',
+    desc: 'Gestiona usuarios, roles y accesos del cuadro de mando.',
+    group: 'Sistema',
+    icon: <UsersIcon size={16} />,
+    roles: ['ADMIN', 'GERENTE'],
+  },
+]
+
+const GROUPS = ['Estratégico', 'Perspectivas', 'Análisis', 'Gobierno y control', 'Sistema']
+
+function initials(nombre: string) {
+  return nombre
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((x) => x[0]?.toUpperCase() ?? '')
+    .join('')
+}
+
 function AppContent() {
   const { usuario, cargando, logout, puede } = useAuth()
   const [tab, setTab] = useState<Tab>('dashboard')
@@ -85,6 +272,7 @@ function AppContent() {
   const [periodos, setPeriodos] = useState<Periodo[]>([])
   const [sel, setSel] = useState<KpiEvaluado | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [sidebarAbierto, setSidebarAbierto] = useState(false)
 
   const { kpis, evaluados, setReal, reset, dirty, resumenGlobal, source } =
     useBsc(periodoId || null)
@@ -120,197 +308,288 @@ function AppContent() {
 
   if (!usuario) return <Login />
 
-  const TABS: { id: Tab; label: string; icono?: string; icon?: React.ReactNode; roles?: ('ADMIN' | 'GERENTE')[] }[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={15} /> },
-    { id: 'financiera', label: 'Financiera', icono: '💰' },
-    { id: 'clientes', label: 'Clientes', icono: '👥' },
-    { id: 'procesos', label: 'Procesos', icono: '🔧' },
-    { id: 'aprendizaje', label: 'Aprendizaje', icono: '📚' },
-    { id: 'simulador', label: 'Simulador', icon: <SlidersHorizontal size={15} /> },
-    { id: 'mapa', label: 'Mapa Estratégico', icon: <Network size={15} /> },
-    { id: 'objetivos', label: 'Objetivos', icon: <Target size={15} /> },
-    { id: 'diccionario', label: 'Diccionario KPI', icon: <BookOpen size={15} /> },
-    { id: 'iniciativas', label: 'Iniciativas', icon: <FolderKanban size={15} /> },
-    { id: 'alertas', label: 'Alertas', icon: <Bell size={15} /> },
-    { id: 'desviaciones', label: 'Desviaciones', icon: <FileWarning size={15} /> },
-    { id: 'evidencias', label: 'Evidencias', icon: <Paperclip size={15} /> },
-    { id: 'compromisos', label: 'Compromisos', icon: <Handshake size={15} /> },
-    { id: 'calendario', label: 'Calendario', icon: <CalendarClock size={15} /> },
-    { id: 'versiones', label: 'Versiones', icon: <GitBranch size={15} /> },
-    { id: 'aprobaciones', label: 'Aprobaciones', icon: <CheckCircle2 size={15} /> },
-    { id: 'comparacion', label: 'Comparación', icon: <ArrowLeftRight size={15} /> },
-    { id: 'importacion', label: 'Importar', icon: <Upload size={15} /> },
-    { id: 'auditoria', label: 'Auditoría', icon: <ScrollText size={15} /> },
-    { id: 'config', label: 'Configuración', icon: <Settings size={15} /> },
-    { id: 'reportes', label: 'Reportes', icon: <FileBarChart size={15} /> },
-    { id: 'admin', label: 'Administración', icon: <UsersIcon size={15} />, roles: ['ADMIN', 'GERENTE'] },
-  ]
-
   const tabsVisibles = TABS.filter((t) => !t.roles || puede(...t.roles))
   const puedeGestionar = puede('ADMIN', 'GERENTE')
+  const meta = TABS.find((t) => t.id === tab) ?? TABS[0]
+  const periodoActual = periodos.find((p) => p.id === periodoId)
+
+  const navegar = (id: Tab) => {
+    setTab(id)
+    setSidebarAbierto(false)
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
-    <div className="mx-auto min-h-screen max-w-7xl px-4 pb-24 pt-6 sm:px-6">
-      <header className="mb-6">
-        <div className="relative overflow-hidden rounded-2xl border px-5 py-4 shadow-sm sm:px-6" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)', borderColor: 'var(--border)' }}>
-          <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(37,99,235,0.08),transparent)]" />
-          <div className="relative flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-white shadow-sm">
-                  <Activity size={18} />
-                </div>
-                <div>
-                  <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Balanced Scorecard — TechPeru SAC</h1>
-                  <p className="text-xs text-[var(--muted)]">
-                    4 perspectivas · 12 objetivos · 36 KPIs · Gobierno, auditoría, alertas y trazabilidad
-                  </p>
-                </div>
-              </div>
-              <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-[var(--muted)]">
-                <span
-                  className="inline-block h-1.5 w-1.5 rounded-full"
-                  style={{ background: source === 'api' ? '#22c55e' : '#f59e0b', boxShadow: source === 'api' ? '0 0 0 4px rgba(34,197,94,0.08)' : '0 0 0 4px rgba(245,158,11,0.08)' }}
-                />
-                {source === 'api' ? 'Conectado al API (PostgreSQL)' : 'Datos locales (API offline)'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div
-                className="rounded-xl border px-4 py-2 text-right shadow-sm"
-                style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-              >
-                <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">Índice global</p>
-                <p className="text-2xl font-semibold tabular-nums">{resumenGlobal.indiceGlobal}%</p>
-                {dirty && <span className="text-[10px] text-[#f59e0b]">escenario simulado</span>}
-              </div>
-              <div
-                className="flex items-center gap-3 rounded-xl border px-3 py-2 shadow-sm"
-                style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(180deg,#eff6ff_0%,#e0f2fe_100%)] text-[#1d4ed8]">
-                  <Shield size={16} />
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-semibold">{usuario.nombre}</p>
-                  <p className="text-[11px] text-[var(--muted)]">{usuario.rol}</p>
-                </div>
-                <button
-                  onClick={logout}
-                  className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#ef4444] transition hover:bg-[#fef2f2]"
-                  title="Cerrar sesión"
-                >
-                  <LogOut size={14} />
-                </button>
-              </div>
-            </div>
-          </div>
+    <div className="bsc-shell">
+      <aside className={`bsc-sidebar${sidebarAbierto ? ' open' : ''}`}>
+        <div className="bsc-brand">
+          <span className="bsc-brand-mark">
+            <Activity size={19} />
+          </span>
+          <span>
+            <strong>BSC TechPeru</strong>
+            <small>Balanced Scorecard 2025</small>
+          </span>
         </div>
-      </header>
 
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex gap-1.5 overflow-x-auto pb-1">
-          {tabsVisibles.map((t) => {
-            const active = tab === t.id
+        <div className="bsc-org">
+          <span className="bsc-org-icon">TP</span>
+          <span>
+            <strong>TechPeru SAC</strong>
+            <small>Plan estratégico 2025</small>
+          </span>
+        </div>
+
+        <nav className="bsc-nav">
+          {GROUPS.map((group) => {
+            const items = tabsVisibles.filter((t) => t.group === group)
+            if (!items.length) return null
             return (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3.5 py-2 text-sm font-medium transition-all hover:-translate-y-px hover:shadow-sm"
-                style={{
-                  background: active ? 'linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%)' : 'var(--surface)',
-                  borderColor: active ? '#1d4ed8' : 'var(--border)',
-                  color: active ? '#fff' : 'var(--text)',
-                  boxShadow: active ? '0 6px 18px -12px rgba(37, 99, 235, 0.9)' : 'none',
-                }}
-              >
-                {t.icon}
-                {t.icono} {t.label}
-              </button>
+              <div key={group}>
+                <p className="bsc-nav-label">{group}</p>
+                {items.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => navegar(t.id)}
+                    className={`bsc-nav-link${tab === t.id ? ' active' : ''}`}
+                    title={t.label}
+                  >
+                    <span className="bsc-nav-icon">{t.icon}</span>
+                    <span className="truncate">{t.label}</span>
+                  </button>
+                ))}
+              </div>
             )
           })}
         </nav>
-        <PeriodoSelector
-          periodos={periodos}
-          periodoId={periodoId}
-          onCambiar={setPeriodoId}
-          onRecargar={cargarPeriodos}
-          puedeGestionar={puedeGestionar}
-          usuarioRol={usuario.rol}
-        />
-      </div>
 
-      {tab === 'dashboard' && (
-        <Dashboard evaluados={evaluados} resumenes={resumenes} resumenGlobal={resumenGlobal} onOpen={setSel} />
-      )}
-
-      {tab !== 'dashboard' &&
-        tab !== 'simulador' &&
-        tab !== 'reportes' &&
-        tab !== 'admin' &&
-        tab !== 'mapa' &&
-        tab !== 'objetivos' &&
-        tab !== 'diccionario' &&
-        tab !== 'iniciativas' &&
-        tab !== 'alertas' &&
-        tab !== 'desviaciones' &&
-        tab !== 'evidencias' &&
-        tab !== 'compromisos' &&
-        tab !== 'calendario' &&
-        tab !== 'versiones' &&
-        tab !== 'aprobaciones' &&
-        tab !== 'comparacion' &&
-        tab !== 'importacion' &&
-        tab !== 'config' &&
-        tab !== 'auditoria' && (
-          <PerspectivaView id={tab} evaluados={evaluados} onOpen={setSel} />
-        )}
-
-      {tab === 'simulador' && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <SimuladorPanel
-            kpis={kpis}
-            setReal={setReal}
-            reset={reset}
-            dirty={dirty}
-            expandedId={expandedId}
-            onToggle={(id) => setExpandedId((prev) => (prev === id ? null : id))}
-          />
-          <div className="space-y-6">
-            <Card title="Índice global en vivo">
-              <SemaforoDonut resumen={resumenGlobal} />
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-                <Conteo label="Logrado" valor={resumenGlobal.logrado} color={ESTADO_META.logrado.color} />
-                <Conteo label="En riesgo" valor={resumenGlobal.riesgo} color={ESTADO_META.riesgo.color} />
-                <Conteo label="Crítico" valor={resumenGlobal.critico} color={ESTADO_META.critico.color} />
-              </div>
-            </Card>
-            <Card title="Cumplimiento por perspectiva">
-              <RadarPerspectivas resumenes={resumenes} />
-            </Card>
+        <div className="bsc-sidebar-foot">
+          <div className="bsc-side-user">
+            <span className="bsc-avatar">{initials(usuario.nombre)}</span>
+            <div className="bsc-user-meta">
+              <strong>{usuario.nombre}</strong>
+              <small>{usuario.rol}</small>
+            </div>
+            <button className="bsc-logout" onClick={logout} title="Cerrar sesión">
+              <LogOut size={15} />
+            </button>
           </div>
         </div>
-      )}
+      </aside>
 
-      {tab === 'mapa' && <MapaEstrategicoView periodos={periodos} />}
-      {tab === 'objetivos' && <ObjetivosPanel />}
-      {tab === 'diccionario' && <DiccionarioPanel periodos={periodos} />}
-      {tab === 'iniciativas' && <IniciativasPanel />}
-      {tab === 'alertas' && <AlertasPanel periodos={periodos} />}
-      {tab === 'desviaciones' && <DesviacionesPanel />}
-      {tab === 'evidencias' && <EvidenciasPanel />}
-      {tab === 'compromisos' && <CompromisosPanel />}
-      {tab === 'calendario' && <CalendarioPanel periodos={periodos} />}
-      {tab === 'versiones' && <VersionesPanel />}
-      {tab === 'aprobaciones' && <AprobacionesPanel />}
-      {tab === 'comparacion' && <ComparacionPanel periodos={periodos} />}
-      {tab === 'importacion' && <ImportPanel periodos={periodos} />}
-      {tab === 'config' && <ConfigPanel />}
-      {tab === 'auditoria' && <AuditoriaPanel />}
-      {tab === 'reportes' && <Reportes periodoId={periodoId || null} />}
-      {tab === 'admin' && <AdminPanel />}
+      {sidebarAbierto && <div className="bsc-overlay" onClick={() => setSidebarAbierto(false)} />}
+
+      <div className="bsc-main">
+        <header className="bsc-topbar">
+          <div className="flex items-center gap-2">
+            <button
+              className="bsc-logout text-[var(--muted)] lg:hidden"
+              onClick={() => setSidebarAbierto(true)}
+              title="Abrir menú"
+            >
+              <Menu size={18} />
+            </button>
+            <div className="bsc-crumb">
+              <span>TechPeru SAC</span>
+              <span className="crumb-sep">/</span>
+              <strong>{meta.label}</strong>
+              {periodoActual && <span className="pill pill-blue pill-no-dot">{periodoActual.nombre}</span>}
+            </div>
+          </div>
+
+          <div className="bsc-top-actions">
+            <button
+              onClick={() => navegar('alertas')}
+              className="relative hidden h-8 w-8 items-center justify-center rounded-lg border text-[var(--muted)] transition hover:bg-[var(--surface-2)] sm:inline-flex"
+              style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+              title="Alertas y notificaciones"
+            >
+              <Bell size={15} />
+              {resumenGlobal.critico > 0 && (
+                <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--red)]" />
+              )}
+            </button>
+            <PeriodoSelector
+              periodos={periodos}
+              periodoId={periodoId}
+              onCambiar={setPeriodoId}
+              onRecargar={cargarPeriodos}
+              puedeGestionar={puedeGestionar}
+              usuarioRol={usuario.rol}
+            />
+            <div className="bsc-index-chip" title="Índice global de cumplimiento">
+              <div>
+                <p className="label">Índice global</p>
+                <p className="value">{resumenGlobal.indiceGlobal}%</p>
+              </div>
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{
+                  background: source === 'api' ? '#22c55e' : '#f59e0b',
+                  boxShadow: source === 'api' ? '0 0 0 4px rgba(34,197,94,0.1)' : '0 0 0 4px rgba(245,158,11,0.1)',
+                }}
+                title={source === 'api' ? 'Conectado al API' : 'Datos locales'}
+              />
+            </div>
+            <div className="bsc-top-user">
+              <span className="bsc-avatar">{initials(usuario.nombre)}</span>
+              <div className="meta">
+                <p className="name">{usuario.nombre}</p>
+                <p className="role">{usuario.rol}</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="bsc-content">
+          <PageHeader
+            eyebrow={meta.group}
+            title={meta.label}
+            desc={meta.desc}
+            actions={
+              tab === 'dashboard' ? (
+                <>
+                  <button className="btn-bsc" onClick={() => navegar('reportes')}>
+                    <FileBarChart size={14} /> Ver reportes
+                  </button>
+                  <button className="btn-bsc btn-bsc-primary" onClick={() => navegar('simulador')}>
+                    <SlidersHorizontal size={14} /> Registrar resultado
+                  </button>
+                </>
+              ) : undefined
+            }
+          />
+
+          {source === 'local' && (
+            <div
+              className="mb-4 flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[11px]"
+              style={{ background: '#fffbeb', borderColor: '#fde68a', color: '#92400e' }}
+            >
+              <AlertTriangle size={14} />
+              API no disponible: se muestran datos locales de demostración.
+            </div>
+          )}
+
+          {dirty && tab === 'dashboard' && (
+            <div
+              className="mb-4 flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[11px]"
+              style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1d4ed8' }}
+            >
+              <TrendingUp size={14} />
+              Escenario simulado activo: los valores mostrados no corresponden a las mediciones guardadas.
+            </div>
+          )}
+
+          {tab === 'dashboard' && (
+            <Dashboard
+              evaluados={evaluados}
+              resumenes={resumenes}
+              resumenGlobal={resumenGlobal}
+              onOpen={setSel}
+              onNavigate={navegar}
+            />
+          )}
+
+          {tab !== 'dashboard' &&
+            tab !== 'simulador' &&
+            tab !== 'reportes' &&
+            tab !== 'admin' &&
+            tab !== 'mapa' &&
+            tab !== 'objetivos' &&
+            tab !== 'diccionario' &&
+            tab !== 'iniciativas' &&
+            tab !== 'alertas' &&
+            tab !== 'desviaciones' &&
+            tab !== 'evidencias' &&
+            tab !== 'compromisos' &&
+            tab !== 'calendario' &&
+            tab !== 'versiones' &&
+            tab !== 'aprobaciones' &&
+            tab !== 'comparacion' &&
+            tab !== 'importacion' &&
+            tab !== 'config' &&
+            tab !== 'auditoria' && (
+              <PerspectivaView id={tab} evaluados={evaluados} onOpen={setSel} />
+            )}
+
+          {tab === 'simulador' && (
+            <div className="grid gap-5 lg:grid-cols-2">
+              <SimuladorPanel
+                kpis={kpis}
+                setReal={setReal}
+                reset={reset}
+                dirty={dirty}
+                expandedId={expandedId}
+                onToggle={(id) => setExpandedId((prev) => (prev === id ? null : id))}
+              />
+              <div className="space-y-5">
+                <Panel title="Índice global en vivo" subtitle="Impacto inmediato de los ajustes">
+                  <SemaforoDonut resumen={resumenGlobal} />
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+                    <Conteo label="Logrado" valor={resumenGlobal.logrado} color={ESTADO_META.logrado.color} />
+                    <Conteo label="En riesgo" valor={resumenGlobal.riesgo} color={ESTADO_META.riesgo.color} />
+                    <Conteo label="Crítico" valor={resumenGlobal.critico} color={ESTADO_META.critico.color} />
+                  </div>
+                </Panel>
+                <Panel title="Cumplimiento por perspectiva" subtitle="Comparación entre las cuatro perspectivas">
+                  <RadarPerspectivas resumenes={resumenes} />
+                </Panel>
+              </div>
+            </div>
+          )}
+
+          {tab === 'mapa' && <MapaEstrategicoView periodos={periodos} />}
+          {tab === 'objetivos' && <ObjetivosPanel />}
+          {tab === 'diccionario' && <DiccionarioPanel periodos={periodos} />}
+          {tab === 'iniciativas' && <IniciativasPanel />}
+          {tab === 'alertas' && <AlertasPanel periodos={periodos} />}
+          {tab === 'desviaciones' && <DesviacionesPanel />}
+          {tab === 'evidencias' && <EvidenciasPanel />}
+          {tab === 'compromisos' && <CompromisosPanel />}
+          {tab === 'calendario' && <CalendarioPanel periodos={periodos} />}
+          {tab === 'versiones' && <VersionesPanel />}
+          {tab === 'aprobaciones' && <AprobacionesPanel />}
+          {tab === 'comparacion' && <ComparacionPanel periodos={periodos} />}
+          {tab === 'importacion' && <ImportPanel periodos={periodos} />}
+          {tab === 'config' && <ConfigPanel />}
+          {tab === 'auditoria' && <AuditoriaPanel />}
+          {tab === 'reportes' && <Reportes periodoId={periodoId || null} />}
+          {tab === 'admin' && <AdminPanel />}
+        </main>
+
+        <footer className="bsc-footer">
+          <span>TechPeru SAC · Balanced Scorecard 2025</span>
+          <span>
+            {source === 'api' ? 'Datos en vivo (PostgreSQL)' : 'Modo demostración local'} ·{' '}
+            {usuario.rol}
+          </span>
+        </footer>
+      </div>
 
       {selLive && <KpiModal kpi={selLive} onClose={() => setSel(null)} />}
+    </div>
+  )
+}
+
+function PageHeader({
+  eyebrow,
+  title,
+  desc,
+  actions,
+}: {
+  eyebrow?: string
+  title: string
+  desc: string
+  actions?: ReactNode
+}) {
+  return (
+    <div className="page-head">
+      <div>
+        {eyebrow && <p className="page-head-eyebrow">{eyebrow}</p>}
+        <h1>{title}</h1>
+        <p>{desc}</p>
+      </div>
+      {actions && <div className="page-head-actions">{actions}</div>}
     </div>
   )
 }
@@ -328,73 +607,113 @@ function Dashboard({
   resumenes,
   resumenGlobal,
   onOpen,
+  onNavigate,
 }: {
   evaluados: KpiEvaluado[]
   resumenes: ReturnType<typeof resumenPorPerspectiva>
   resumenGlobal: ReturnType<typeof useBsc>['resumenGlobal']
   onOpen: (k: KpiEvaluado) => void
+  onNavigate: (id: Tab) => void
 }) {
+  const objetivos = useMemo(() => new Set(evaluados.map((k) => k.objetivo)).size, [evaluados])
+  const atencion = resumenGlobal.riesgo + resumenGlobal.critico
+
   return (
-    <div className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        <Card title="Semáforo ejecutivo">
+    <div className="space-y-5">
+      <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Cumplimiento estratégico"
+          value={`${resumenGlobal.indiceGlobal}%`}
+          foot={
+            <span className={resumenGlobal.indiceGlobal >= 90 ? 'trend-up' : resumenGlobal.indiceGlobal >= 75 ? '' : 'trend-down'}>
+              {resumenGlobal.total} KPI evaluados
+            </span>
+          }
+          icon={<TrendingUp size={17} />}
+        />
+        <MetricCard
+          label="Objetivos estratégicos"
+          value={String(objetivos)}
+          foot={<span className="trend-up">4 perspectivas alineadas</span>}
+          icon={<Target size={17} />}
+          tone="green"
+        />
+        <MetricCard
+          label="Indicadores KPI"
+          value={String(resumenGlobal.total)}
+          foot={<span className="trend-up">{resumenGlobal.logrado} cumplidos</span>}
+          icon={<Activity size={17} />}
+          tone="amber"
+        />
+        <MetricCard
+          label="Requieren atención"
+          value={String(atencion)}
+          foot={<span className={atencion ? 'trend-down' : 'trend-up'}>{resumenGlobal.critico} críticos</span>}
+          icon={<AlertTriangle size={17} />}
+          tone="red"
+        />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+        <Panel title="Semáforo ejecutivo" subtitle="Distribución de los indicadores por estado">
           <SemaforoDonut resumen={resumenGlobal} />
           <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
             <Conteo label="Logrado" valor={resumenGlobal.logrado} color={ESTADO_META.logrado.color} />
             <Conteo label="En riesgo" valor={resumenGlobal.riesgo} color={ESTADO_META.riesgo.color} />
             <Conteo label="Crítico" valor={resumenGlobal.critico} color={ESTADO_META.critico.color} />
           </div>
-        </Card>
-        <Card title="Cumplimiento por perspectiva">
+        </Panel>
+        <Panel title="Cumplimiento por perspectiva" subtitle="Índice ponderado según los KPI registrados">
           <RadarPerspectivas resumenes={resumenes} />
-        </Card>
+        </Panel>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
         {PERSPECTIVAS.map((p) => {
           const r = resumenes[p.id]
           return (
             <button
               key={p.id}
-              onClick={() => onOpen({
-                id: '',
-                perspectivaId: p.id,
-                objetivo: '',
-                nombre: '',
-                unidad: '',
-                meta: 0,
-                real: 0,
-                inverso: false,
-                accion: '',
-                cumplimiento: r.indiceGlobal,
-                estado: 'logrado',
-              })}
-              className="rounded-2xl border p-4 text-left"
-              style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
+              onClick={() => onNavigate(p.id)}
+              className="bsc-card group p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <p className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                <span>{p.icono}</span> {p.nombre}
-              </p>
-              <p className="text-3xl font-bold tabular-nums" style={{ color: p.color }}>
+              <div className="flex items-start justify-between gap-2">
+                <p className="flex items-center gap-2 text-[12px] font-semibold text-[var(--text)]">
+                  <span>{p.icono}</span> {p.nombre}
+                </p>
+                <ChevronRight size={15} className="text-[var(--muted)] transition group-hover:translate-x-0.5" />
+              </div>
+              <p className="mt-2 text-[26px] font-extrabold tabular-nums" style={{ color: p.color }}>
                 {r.indiceGlobal}%
               </p>
-              <div className="mt-2 flex gap-2 text-xs text-[var(--muted)]">
-                <span>✅ {r.logrado}</span>
-                <span>⚠️ {r.riesgo}</span>
-                <span>❌ {r.critico}</span>
+              <div className="bsc-progress mt-2">
+                <span style={{ width: `${Math.min(100, r.indiceGlobal)}%`, background: p.color }} />
+              </div>
+              <div className="mt-2.5 flex gap-3 text-[10.5px] text-[var(--muted)]">
+                <span className="text-[var(--green)]">● {r.logrado}</span>
+                <span className="text-[var(--amber)]">● {r.riesgo}</span>
+                <span className="text-[var(--red)]">● {r.critico}</span>
               </div>
             </button>
           )
         })}
       </div>
 
-      <Card title="Meta vs Real — todos los KPIs">
+      <Panel title="Meta vs Real — todos los KPIs" subtitle="Comparación entre el objetivo planificado y el resultado reportado">
         <MetaRealChart kpis={evaluados} />
-      </Card>
+      </Panel>
 
       <div>
-        <h2 className="mb-3 text-base font-semibold">Explorador de KPIs (36)</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-3 flex items-end justify-between">
+          <div>
+            <h2 className="text-[15px] font-bold">Explorador de KPIs</h2>
+            <p className="text-[10.5px] text-[var(--muted)]">
+              Selecciona un indicador para ver su análisis y la acción recomendada.
+            </p>
+          </div>
+          <span className="tag">{evaluados.length} indicadores</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {evaluados.map((k) => (
             <KpiCard key={k.id} kpi={k} onOpen={onOpen} />
           ))}
@@ -419,40 +738,101 @@ function PerspectivaView({
   const objetivos = [...new Set(list.map((k) => k.objetivo))]
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <h2 className="text-lg font-bold">
-          {p.icono} {p.nombre}
-        </h2>
-        <span className="text-sm font-bold tabular-nums" style={{ color: p.color }}>
-          {r.indiceGlobal}%
-        </span>
+    <div className="space-y-5">
+      <div className="bsc-card grid gap-4 p-5 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+        <div
+          className="flex h-12 w-12 items-center justify-center rounded-xl text-xl"
+          style={{ background: `${p.color}18`, color: p.color }}
+        >
+          {p.icono}
+        </div>
+        <div>
+          <p className="text-sm font-bold">{p.nombre}</p>
+          <p className="text-[11px] text-[var(--muted)]">
+            {objetivos.length} objetivos · {list.length} indicadores en esta perspectiva
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-extrabold tabular-nums" style={{ color: p.color }}>
+            {r.indiceGlobal}%
+          </p>
+          <p className="text-[10px] text-[var(--muted)]">cumplimiento</p>
+        </div>
       </div>
 
-      {objetivos.map((obj) => (
-        <div key={obj}>
-          <p className="mb-2 flex items-center gap-1 text-sm font-semibold" style={{ color: 'var(--muted)' }}>
-            <ChevronRight size={14} /> {obj}
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {list
-              .filter((k) => k.objetivo === obj)
-              .map((k) => (
+      {objetivos.map((obj) => {
+        const items = list.filter((k) => k.objetivo === obj)
+        return (
+          <div key={obj}>
+            <p className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold text-[var(--muted)]">
+              <ChevronRight size={14} /> {obj}
+              <span className="tag">{items.length} KPI</span>
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {items.map((k) => (
                 <KpiCard key={k.id} kpi={k} onOpen={onOpen} />
               ))}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function MetricCard({
+  label,
+  value,
+  foot,
+  icon,
+  tone = 'blue',
+}: {
+  label: string
+  value: string
+  foot: ReactNode
+  icon: ReactNode
+  tone?: 'blue' | 'green' | 'amber' | 'red'
+}) {
+  const tones: Record<string, { bg: string; color: string }> = {
+    blue: { bg: '#eff6ff', color: '#2869d9' },
+    green: { bg: '#eaf8f1', color: '#16845b' },
+    amber: { bg: '#fff5dd', color: '#b97708' },
+    red: { bg: '#ffebed', color: '#c23a42' },
+  }
+  const t = tones[tone]
   return (
-    <div className="rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+    <article className="metric-card">
+      <div className="metric-top">
+        <span>{label}</span>
+        <span className="metric-icon" style={{ background: t.bg, color: t.color }}>
+          {icon}
+        </span>
+      </div>
+      <div className="metric-value">{value}</div>
+      <div className="metric-foot">{foot}</div>
+    </article>
+  )
+}
+
+function Panel({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string
+  subtitle?: string
+  children: ReactNode
+}) {
+  return (
+    <section className="bsc-card bsc-panel">
+      <div className="bsc-panel-head">
+        <div>
+          <h2>{title}</h2>
+          {subtitle && <p>{subtitle}</p>}
+        </div>
+      </div>
       {children}
-    </div>
+    </section>
   )
 }
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeftRight } from 'lucide-react'
+
 import { api } from '../lib/api'
 import type { Comparacion, Periodo } from '../data/types'
 
@@ -22,9 +22,6 @@ export function ComparacionPanel({ periodos }: { periodos: Periodo[] }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <ArrowLeftRight size={18} className="text-[#06b6d4]" /> Comparación entre Períodos (RF-19)
-        </h2>
         <div className="flex items-center gap-2">
           <select
             value={a}
@@ -83,10 +80,10 @@ export function ComparacionPanel({ periodos }: { periodos: Periodo[] }) {
               </div>
             ))}
           </div>
-          <div className="overflow-x-auto rounded-2xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <table className="w-full text-xs">
+          <div className="bsc-card table-scroll">
+            <table className="bsc-table">
               <thead>
-                <tr style={{ background: 'var(--surface-2)' }}>
+                <tr>
                   <th className="p-2 text-left">KPI</th>
                   <th className="p-2 text-left">Perspectiva</th>
                   <th className="p-2 text-right">{res.periodoA?.nombre}</th>

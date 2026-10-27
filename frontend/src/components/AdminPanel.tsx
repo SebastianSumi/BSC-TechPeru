@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { UserPlus, Users as UsersIcon, Trash2, Link2 } from 'lucide-react'
+import { UserPlus, Trash2, Link2 } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Asignacion, Kpi, RolNombre, Usuario } from '../data/types'
@@ -72,23 +72,22 @@ export function AdminPanel() {
 
   return (
     <div className="space-y-6">
-      <h2 className="flex items-center gap-2 text-lg font-bold">
-        <UsersIcon size={20} className="text-[#3b82f6]" /> Usuarios, roles y asignación de objetivos
-      </h2>
 
       {error && <p className="text-sm text-[#ef4444]">{error}</p>}
       {msg && <p className="text-sm text-[#10b981]">{msg}</p>}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div
-          className="rounded-2xl border p-4"
-          style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-        >
-          <p className="mb-3 text-sm font-semibold">Usuarios</p>
+        <div className="bsc-card bsc-panel">
+          <div className="bsc-panel-head">
+            <div>
+              <h2>Usuarios</h2>
+              <p>Administra roles y estado de las cuentas.</p>
+            </div>
+          </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="bsc-table">
               <thead>
-                <tr style={{ background: 'var(--surface-2)' }}>
+                <tr>
                   <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Nombre</th>
                   <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Rol</th>
                   <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Estado</th>
@@ -143,12 +142,8 @@ export function AdminPanel() {
         </div>
 
         {esAdmin && (
-          <form
-            onSubmit={crearUsuario}
-            className="rounded-2xl border p-4"
-            style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-          >
-            <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
+          <form onSubmit={crearUsuario} className="bsc-card bsc-panel">
+            <p className="mb-3 flex items-center gap-1.5 text-sm font-bold">
               <UserPlus size={16} /> Nuevo usuario
             </p>
             <div className="space-y-3">
@@ -173,7 +168,7 @@ export function AdminPanel() {
               <button
                 type="submit"
                 className="w-full rounded-lg px-4 py-2 text-sm font-semibold text-white"
-                style={{ background: '#3b82f6' }}
+                style={{ background: 'var(--blue)' }}
               >
                 Crear usuario
               </button>
@@ -182,11 +177,8 @@ export function AdminPanel() {
         )}
       </div>
 
-      <div
-        className="rounded-2xl border p-4"
-        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-      >
-        <p className="mb-3 flex items-center gap-1.5 text-sm font-semibold">
+      <div className="bsc-card bsc-panel">
+        <p className="mb-3 flex items-center gap-1.5 text-sm font-bold">
           <Link2 size={16} /> Asignación de objetivos (KPIs) a responsables
         </p>
 
@@ -226,7 +218,7 @@ export function AdminPanel() {
           <button
             type="submit"
             className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
-            style={{ background: '#3b82f6' }}
+            style={{ background: 'var(--blue)' }}
           >
             Asignar
           </button>

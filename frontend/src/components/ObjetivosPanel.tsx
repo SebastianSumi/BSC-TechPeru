@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Target, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Objetivo } from '../data/types'
@@ -33,10 +33,7 @@ export function ObjetivosPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <Target size={18} className="text-[#10b981]" /> Objetivos Estratégicos (RF-03)
-        </h2>
+      <div className="flex items-center justify-end">
         {puedeGestionar && (
           <button
             onClick={() => setMostrar((v) => !v)}
@@ -91,24 +88,31 @@ export function ObjetivosPanel() {
         {objetivos.map((o) => {
           const p = PERSPECTIVAS.find((x) => x.id === o.perspectivaId)
           return (
-            <div
-              key={o.id}
-              className="rounded-2xl border p-4"
-              style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">
-                  {p?.icono} {o.codigo} — {o.nombre}
-                </p>
-                <span className="text-xs font-bold" style={{ color: p?.color }}>
+            <article key={o.id} className="bsc-card p-4 transition hover:shadow-md">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="tag" style={{ background: `${p?.color}14`, color: p?.color }}>
+                    {p?.icono} {o.codigo}
+                  </span>
+                  <p className="mt-1.5 text-[12.5px] font-semibold leading-snug">{o.nombre}</p>
+                </div>
+                <span className="text-[15px] font-extrabold tabular-nums" style={{ color: p?.color }}>
                   {o.indice ?? 0}%
                 </span>
               </div>
-              <p className="mt-1 text-xs text-[var(--muted)]">{o.descripcion}</p>
-              <div className="mt-2 text-[11px] text-[var(--muted)]">
-                Ponderación {o.ponderacion ?? 0}% · KPIs {o._count?.kpis ?? 0}
+              <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-[var(--muted)]">
+                {o.descripcion}
+              </p>
+              <div className="bsc-progress mt-3">
+                <span
+                  style={{ width: `${Math.min(100, o.indice ?? 0)}%`, background: p?.color }}
+                />
               </div>
-            </div>
+              <div className="mt-2 flex items-center justify-between text-[10px] text-[var(--muted)]">
+                <span>Ponderación {o.ponderacion ?? 0}%</span>
+                <span>{o._count?.kpis ?? 0} KPI asociados</span>
+              </div>
+            </article>
           )
         })}
       </div>

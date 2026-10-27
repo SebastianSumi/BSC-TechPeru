@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Paperclip, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { api } from '../lib/api'
 import type { Evidencia, Kpi } from '../data/types'
 
@@ -25,10 +25,7 @@ export function EvidenciasPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <Paperclip size={18} className="text-[#06b6d4]" /> Evidencias (RF-17)
-        </h2>
+      <div className="flex items-center justify-end">
         <button
           onClick={() => setMostrar((v) => !v)}
           className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs"

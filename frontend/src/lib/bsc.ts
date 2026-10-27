@@ -47,7 +47,7 @@ export function resumenPorPerspectiva(kpis: Kpi[]): Record<PerspectivaId, Resume
 }
 
 export const ESTADO_META: Record<Estado, { label: string; emoji: string; color: string; bg: string }> = {
-  logrado: { label: 'LOGRADO', emoji: '✅', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
-  riesgo: { label: 'EN RIESGO', emoji: '⚠️', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
-  critico: { label: 'CRÍTICO', emoji: '❌', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+  logrado: { label: 'LOGRADO', emoji: '✅', color: '#16845b', bg: '#e8f7ef' },
+  riesgo: { label: 'EN RIESGO', emoji: '⚠️', color: '#b97708', bg: '#fff5dd' },
+  critico: { label: 'CRÍTICO', emoji: '❌', color: '#c23a42', bg: '#ffebed' },
 }

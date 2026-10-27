@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookOpen } from 'lucide-react'
+
 import { api } from '../lib/api'
 import type { Kpi, Periodo } from '../data/types'
 import { PERSPECTIVAS } from '../data/kpis'
@@ -28,9 +28,6 @@ export function DiccionarioPanel({ periodos }: { periodos: Periodo[] }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <BookOpen size={18} className="text-[#8b5cf6]" /> Diccionario de Indicadores (RF-04/RF-20)
-        </h2>
         <div className="flex gap-2">
           <select
             value={perspectivaId}
@@ -60,10 +57,10 @@ export function DiccionarioPanel({ periodos }: { periodos: Periodo[] }) {
           </select>
         </div>
       </div>
-      <div className="overflow-x-auto rounded-2xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-        <table className="w-full text-xs">
+      <div className="bsc-card table-scroll">
+        <table className="bsc-table">
           <thead>
-            <tr style={{ background: 'var(--surface-2)' }}>
+            <tr>
               <th className="p-2 text-left">Código</th>
               <th className="p-2 text-left">Indicador</th>
               <th className="p-2 text-left">Objetivo</th>

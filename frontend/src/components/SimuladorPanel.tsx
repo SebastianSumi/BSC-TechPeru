@@ -1,4 +1,4 @@
-import { RotateCcw, SlidersHorizontal } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import { PERSPECTIVAS } from '../data/kpis'
 import { evaluar } from '../lib/bsc'
 import type { Kpi } from '../data/types'
@@ -19,11 +19,12 @@ export function SimuladorPanel({
   onToggle: (id: string) => void
 }) {
   return (
-    <div className="rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-base font-semibold">
-          <SlidersHorizontal size={18} className="text-[var(--muted)]" /> Simulador de escenarios
-        </h2>
+    <div className="bsc-card bsc-panel">
+      <div className="bsc-panel-head">
+        <div>
+          <h2>Simulador de escenarios</h2>
+          <p>Ajusta el valor Real de cada KPI y observa cómo cambia el índice global en vivo.</p>
+        </div>
         <button
           onClick={reset}
           disabled={!dirty}
@@ -33,10 +34,6 @@ export function SimuladorPanel({
           <RotateCcw size={13} /> Restaurar
         </button>
       </div>
-
-      <p className="mb-4 text-xs text-[var(--muted)]">
-        Ajusta el valor <b>Real</b> de cada KPI y observa cómo cambia el índice global en vivo.
-      </p>
 
       <div className="space-y-4">
         {PERSPECTIVAS.map((p) => (

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Upload } from 'lucide-react'
+
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Periodo } from '../data/types'
@@ -27,11 +27,6 @@ export function ImportPanel({ periodos }: { periodos: Periodo[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <Upload size={18} className="text-[#f59e0b]" /> Importación Excel/CSV (RF-10)
-        </h2>
-      </div>
       {puedeImportar && (
         <div className="space-y-3">
           <div className="flex gap-2">

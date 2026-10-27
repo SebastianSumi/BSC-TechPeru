@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { GitBranch, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { PlanVersion } from '../data/types'
@@ -30,10 +30,7 @@ export function VersionesPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <GitBranch size={18} className="text-[#a855f7]" /> Versiones del Plan Estratégico (RF-13)
-        </h2>
+      <div className="flex items-center justify-end">
         {puedeGestionar && (
           <button
             onClick={() => setMostrar((v) => !v)}

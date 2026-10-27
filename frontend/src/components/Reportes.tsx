@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Download, FileBarChart, Filter, Printer } from 'lucide-react'
+import { Download, Filter, Printer } from 'lucide-react'
 import { api } from '../lib/api'
 import { ESTADO_META } from '../lib/bsc'
 import { PERSPECTIVAS } from '../data/kpis'
@@ -72,9 +72,6 @@ export function Reportes({ periodoId }: { periodoId?: string | null }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <FileBarChart size={20} className="text-[#3b82f6]" /> Reportes dinámicos
-        </h2>
         <div className="flex gap-2">
           <button
             onClick={exportCsv}
@@ -95,10 +92,7 @@ export function Reportes({ periodoId }: { periodoId?: string | null }) {
         </div>
       </div>
 
-      <div
-        className="flex flex-wrap items-end gap-3 rounded-2xl border p-4"
-        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-      >
+      <div className="bsc-card flex flex-wrap items-end gap-3 p-4">
         <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--muted)]">
           <Filter size={14} /> Filtros
         </span>
@@ -168,14 +162,11 @@ export function Reportes({ periodoId }: { periodoId?: string | null }) {
             <Metric label="Crítico" valor={reporte.resumen.critico} color={ESTADO_META.critico.color} />
           </div>
 
-          <div
-            className="overflow-hidden rounded-2xl border"
-            style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-          >
+          <div className="bsc-card overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="bsc-table">
                 <thead>
-                  <tr style={{ background: 'var(--surface-2)' }}>
+                  <tr>
                     <Th>KPI</Th>
                     <Th>Objetivo</Th>
                     <Th className="text-right">Meta</Th>
@@ -244,11 +235,8 @@ export function Reportes({ periodoId }: { periodoId?: string | null }) {
 
 function Metric({ label, valor, color }: { label: string; valor: string | number; color: string }) {
   return (
-    <div
-      className="rounded-2xl border p-4"
-      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-    >
-      <p className="text-[11px] text-[var(--muted)]">{label}</p>
+    <div className="bsc-card p-4">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</p>
       <p className="text-2xl font-bold tabular-nums" style={{ color }}>
         {valor}
       </p>

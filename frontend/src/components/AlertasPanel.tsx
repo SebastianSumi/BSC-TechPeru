@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Bell, RefreshCcw } from 'lucide-react'
+import { RefreshCcw } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Alerta, Periodo } from '../data/types'
@@ -45,10 +45,7 @@ export function AlertasPanel({ periodos }: { periodos: Periodo[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <Bell size={18} className="text-[#ef4444]" /> Alertas y Notificaciones (RF-15)
-        </h2>
+      <div className="flex flex-wrap items-center justify-end gap-3">
         {puedeGestionar && (
           <div className="flex items-center gap-2">
             <select

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FolderKanban, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Iniciativa, Objetivo } from '../data/types'
@@ -34,10 +34,7 @@ export function IniciativasPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <FolderKanban size={18} className="text-[#f59e0b]" /> Iniciativas Estratégicas (RF-06)
-        </h2>
+      <div className="flex items-center justify-end">
         {puedeGestionar && (
           <button
             onClick={() => setMostrar((v) => !v)}

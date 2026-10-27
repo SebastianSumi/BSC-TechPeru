@@ -1,10 +1,10 @@
 import type { Kpi, Perspectiva } from './types'
 
 export const PERSPECTIVAS: Perspectiva[] = [
-  { id: 'financiera', nombre: 'Financiera', icono: '💰', color: '#10b981' },
-  { id: 'clientes', nombre: 'Clientes', icono: '👥', color: '#3b82f6' },
-  { id: 'procesos', nombre: 'Procesos Internos', icono: '🔧', color: '#f59e0b' },
-  { id: 'aprendizaje', nombre: 'Aprendizaje y Crecimiento', icono: '📚', color: '#8b5cf6' },
+  { id: 'financiera', nombre: 'Financiera', icono: '💰', color: '#16845b' },
+  { id: 'clientes', nombre: 'Clientes', icono: '👥', color: '#2563eb' },
+  { id: 'procesos', nombre: 'Procesos Internos', icono: '🔧', color: '#b97708' },
+  { id: 'aprendizaje', nombre: 'Aprendizaje y Crecimiento', icono: '📚', color: '#7354c8' },
 ]
 
 export const KPIS: Kpi[] = [

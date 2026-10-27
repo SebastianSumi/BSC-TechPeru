@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ScrollText } from 'lucide-react'
+
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Auditoria } from '../data/types'
@@ -19,15 +19,10 @@ export function AuditoriaPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <ScrollText size={18} className="text-[#94a3b8]" /> Auditoría (RF-11)
-        </h2>
-      </div>
-      <div className="overflow-x-auto rounded-2xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-        <table className="w-full text-xs">
+      <div className="bsc-card table-scroll">
+        <table className="bsc-table">
           <thead>
-            <tr style={{ background: 'var(--surface-2)' }}>
+            <tr>
               <th className="p-2 text-left">Fecha</th>
               <th className="p-2 text-left">Usuario</th>
               <th className="p-2 text-left">Acción</th>

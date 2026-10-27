@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Settings } from 'lucide-react'
+
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Config } from '../data/types'
@@ -23,10 +23,7 @@ export function ConfigPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <Settings size={18} className="text-[#64748b]" /> Configuración (RF-09)
-        </h2>
+      <div className="flex items-center justify-end">
         {esAdmin && (
           <button
             onClick={guardar}
