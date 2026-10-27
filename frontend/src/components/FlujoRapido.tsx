@@ -3,6 +3,7 @@ import { CheckSquare, Lightbulb, Save, Users, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Kpi, Objetivo, Usuario } from '../data/types'
+import { Select } from './Select'
 
 const INPUT: React.CSSProperties = {
   background: 'var(--surface-2)',
@@ -279,19 +280,18 @@ export function ModalNuevaTarea({
           </Campo>
           <div className="grid grid-cols-2 gap-3">
             <Campo label="Responsable">
-              <select
+              <Select
                 value={form.responsableId}
                 onChange={(e) => setForm({ ...form, responsableId: e.target.value })}
-                className="w-full rounded-lg border px-3 py-1.5 text-xs outline-none"
-                style={INPUT}
+                className="bsc-select"
               >
                 <option value="">Sin asignar</option>
                 {usuarios.map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.nombre}
+                    {u.nombre} ({u.rol})
                   </option>
                 ))}
-              </select>
+              </Select>
             </Campo>
             <Campo label="Fecha límite">
               <input

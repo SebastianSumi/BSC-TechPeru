@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Desviacion, Kpi } from '../data/types'
+import { Select } from './Select'
 
 export function DesviacionesPanel() {
   const { puede } = useAuth()
@@ -46,19 +47,17 @@ export function DesviacionesPanel() {
           className="grid gap-2 rounded-2xl border p-3 sm:grid-cols-4"
           style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
         >
-          <select
+          <Select
             value={form.kpiId}
             onChange={(e) => setForm({ ...form, kpiId: e.target.value })}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
-            <option value="">KPI...</option>
+            className="bsc-select">
+            <option value="">Selecciona un KPI…</option>
             {kpis.map((k) => (
               <option key={k.id} value={k.id}>
-                {k.id} - {k.nombre}
+                {k.codigo ?? k.id} · {k.nombre}
               </option>
             ))}
-          </select>
+          </Select>
           <input
             placeholder="Causa"
             value={form.causa}

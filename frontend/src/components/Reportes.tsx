@@ -12,6 +12,7 @@ import type {
   ReporteObjetivos,
   Usuario,
 } from '../data/types'
+import { Select } from './Select'
 
 export function Reportes({ periodoId }: { periodoId?: string | null }) {
   const { puede } = useAuth()
@@ -107,69 +108,61 @@ export function Reportes({ periodoId }: { periodoId?: string | null }) {
 
         <div>
           <label className="mb-1 block text-[11px] text-[var(--muted)]">Perspectiva</label>
-          <select
+          <Select
             value={perspectiva}
             onChange={(e) => setPerspectiva(e.target.value)}
-            className="rounded-lg border px-3 py-1.5 text-sm outline-none"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
-          >
+            className="bsc-select">
             <option value="">Todas</option>
             {perspectivas.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nombre}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
           <label className="mb-1 block text-[11px] text-[var(--muted)]">Período</label>
-          <select
+          <Select
             value={periodo}
             onChange={(e) => setPeriodo(e.target.value)}
-            className="rounded-lg border px-3 py-1.5 text-sm outline-none"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
-          >
+            className="bsc-select">
             <option value="">Sin período (base)</option>
             {periodos.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nombre}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
           <label className="mb-1 block text-[11px] text-[var(--muted)]">Estado</label>
-          <select
+          <Select
             value={estado}
             onChange={(e) => setEstado(e.target.value)}
-            className="rounded-lg border px-3 py-1.5 text-sm outline-none"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
-          >
+            className="bsc-select">
             <option value="">Todos</option>
             <option value="LOGRADO">Logrado</option>
             <option value="EN_RIESGO">En riesgo</option>
             <option value="CRITICO">Crítico</option>
-          </select>
+          </Select>
         </div>
 
         {puedeVerUsuarios && (
           <div>
             <label className="mb-1 block text-[11px] text-[var(--muted)]">Responsable</label>
-            <select
+            <Select
               value={usuario}
               onChange={(e) => setUsuario(e.target.value)}
-              className="rounded-lg border px-3 py-1.5 text-sm outline-none"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
-            >
+              className="bsc-select">
               <option value="">Todos</option>
               {usuarios.map((u) => (
                 <option key={u.id} value={u.id}>
-                  {u.nombre}
+                  {u.nombre} ({u.rol})
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         )}
       </div>

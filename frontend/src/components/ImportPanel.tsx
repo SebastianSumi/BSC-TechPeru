@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Periodo } from '../data/types'
+import { Select } from './Select'
 
 export function ImportPanel({ periodos }: { periodos: Periodo[] }) {
   const { puede } = useAuth()
@@ -30,19 +31,17 @@ export function ImportPanel({ periodos }: { periodos: Periodo[] }) {
       {puedeImportar && (
         <div className="space-y-3">
           <div className="flex gap-2">
-            <select
+            <Select
               value={periodoId}
               onChange={(e) => setPeriodoId(e.target.value)}
-              className="rounded-lg border px-2 py-1.5 text-xs"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-            >
-              <option value="">Período...</option>
+              className="bsc-select">
+              <option value="">Selecciona un período…</option>
               {periodos.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.nombre}
                 </option>
               ))}
-            </select>
+            </Select>
             <button
               onClick={importar}
               disabled={!periodoId || cargando}

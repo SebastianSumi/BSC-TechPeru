@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Calendar, Check, Plus, X } from 'lucide-react'
 import { api } from '../lib/api'
 import type { Periodo } from '../data/types'
+import { Select } from './Select'
 
 export function PeriodoSelector({
   periodos,
@@ -40,14 +41,12 @@ export function PeriodoSelector({
   return (
     <div className="relative flex items-center gap-1.5">
       <Calendar size={14} className="hidden text-[var(--muted)] sm:block" />
-      <select
+      <Select
         value={periodoId}
         onChange={(e) => onCambiar(e.target.value)}
         title="Período de evaluación"
         aria-label="Período de evaluación"
-        className="max-w-[150px] rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold outline-none transition focus:border-[#93c5fd]"
-        style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text)' }}
-      >
+        className="max-w-[150px] px-2.5 text-[11px] font-semibold transition focus:border-[#93c5fd] bsc-select">
         <option value="">Sin período</option>
         {periodos.map((p) => (
           <option key={p.id} value={p.id}>
@@ -55,7 +54,7 @@ export function PeriodoSelector({
             {p.activo ? ' · activo' : ''}
           </option>
         ))}
-      </select>
+      </Select>
 
       {puedeGestionar && periodoId && (
         <button
@@ -102,18 +101,18 @@ export function PeriodoSelector({
                 </div>
                 <div className="field-bsc">
                   <label htmlFor="trimestre">Trimestre</label>
-                  <select
+                  <Select
                     id="trimestre"
                     value={form.trimestre}
                     onChange={(e) => setForm({ ...form, trimestre: Number(e.target.value) })}
-                    className="!py-1.5 !text-[11px]"
+                    className="!py-1.5 !text-[11px] bsc-select"
                   >
                     {[1, 2, 3, 4].map((t) => (
                       <option key={t} value={t}>
                         Q{t}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               </div>
               <button onClick={crear} className="btn-bsc btn-bsc-primary mt-2 w-full !py-1.5">

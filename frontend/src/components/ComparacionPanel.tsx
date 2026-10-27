@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { api } from '../lib/api'
 import type { Comparacion, Periodo } from '../data/types'
+import { Select } from './Select'
 
 export function ComparacionPanel({ periodos }: { periodos: Periodo[] }) {
   const [a, setA] = useState('')
@@ -23,33 +24,29 @@ export function ComparacionPanel({ periodos }: { periodos: Periodo[] }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <select
+          <Select
             value={a}
             onChange={(e) => setA(e.target.value)}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
-            <option value="">Período A</option>
+            className="bsc-select">
+            <option value="">Selecciona período A…</option>
             {periodos.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nombre}
               </option>
             ))}
-          </select>
+          </Select>
           <span className="text-xs text-[var(--muted)]">vs</span>
-          <select
+          <Select
             value={b}
             onChange={(e) => setB(e.target.value)}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
-            <option value="">Período B</option>
+            className="bsc-select">
+            <option value="">Selecciona período B…</option>
             {periodos.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nombre}
               </option>
             ))}
-          </select>
+          </Select>
           <button
             onClick={comparar}
             disabled={!a || !b || cargando}

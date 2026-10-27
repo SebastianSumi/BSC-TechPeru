@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../lib/api'
 import type { MapaEstrategico, Objetivo, Periodo } from '../data/types'
+import { Select } from './Select'
 
 const COL: Record<string, string> = {
   financiera: '#16845b',
@@ -43,19 +44,17 @@ export function MapaEstrategicoView({ periodos }: { periodos: Periodo[] }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-end gap-3">
         <span className="text-[11px] text-[var(--muted)]">Período</span>
-        <select
+        <Select
           value={periodoId}
           onChange={(e) => setPeriodoId(e.target.value)}
-          className="rounded-lg border px-3 py-1.5 text-xs outline-none"
-          style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
-        >
+          className="bsc-select">
           <option value="">Sin período</option>
           {periodos.map((p) => (
             <option key={p.id} value={p.id}>
               {p.nombre}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {cargando ? (

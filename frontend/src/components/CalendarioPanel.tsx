@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { api } from '../lib/api'
 import type { EventoCalendario, Periodo } from '../data/types'
+import { Select } from './Select'
 
 export function CalendarioPanel({ periodos }: { periodos: Periodo[] }) {
   const [eventos, setEventos] = useState<EventoCalendario[]>([])
@@ -16,19 +17,17 @@ export function CalendarioPanel({ periodos }: { periodos: Periodo[] }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <select
+        <Select
           value={periodoId}
           onChange={(e) => setPeriodoId(e.target.value)}
-          className="rounded-lg border px-2 py-1.5 text-xs"
-          style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-        >
+          className="bsc-select">
           <option value="">Todos</option>
           {periodos.map((p) => (
             <option key={p.id} value={p.id}>
               {p.nombre}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       <div className="space-y-2">
         {eventos.map((e) => (

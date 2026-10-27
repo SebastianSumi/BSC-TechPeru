@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Iniciativa, Objetivo } from '../data/types'
+import { Select } from './Select'
 
 export function IniciativasPanel() {
   const { puede } = useAuth()
@@ -64,19 +65,17 @@ export function IniciativasPanel() {
             className="rounded-lg border px-2 py-1.5 text-xs sm:col-span-2"
             style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
           />
-          <select
+          <Select
             value={form.objetivoId}
             onChange={(e) => setForm({ ...form, objetivoId: e.target.value })}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
-            <option value="">Objetivo...</option>
+            className="bsc-select">
+            <option value="">Selecciona un objetivo…</option>
             {objetivos.map((o) => (
               <option key={o.id} value={o.id}>
-                {o.codigo}
+                {o.codigo} · {o.nombre}
               </option>
             ))}
-          </select>
+          </Select>
           <button
             onClick={crear}
             className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white"

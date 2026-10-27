@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Download, FileText, Link2, Paperclip, Plus, Trash2 } from 'lucide-react'
 import { api } from '../lib/api'
 import type { Evidencia, Kpi, Tarea, TipoEvidencia } from '../data/types'
+import { Select } from './Select'
 
 type FormEvidencia = {
   tipo: TipoEvidencia
@@ -128,16 +129,14 @@ export function EvidenciasPanel() {
           className="grid gap-2 rounded-2xl border p-3 sm:grid-cols-2 lg:grid-cols-4"
           style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
         >
-          <select
+          <Select
             value={form.tipo}
             onChange={(e) => setForm({ ...form, tipo: e.target.value as TipoEvidencia })}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
+            className="bsc-select">
             <option value="ENLACE">Enlace</option>
             <option value="TEXTO">Texto</option>
             <option value="ARCHIVO">Archivo</option>
-          </select>
+          </Select>
           <input
             placeholder="Título"
             value={form.titulo}
@@ -145,33 +144,28 @@ export function EvidenciasPanel() {
             className="rounded-lg border px-2 py-1.5 text-xs"
             style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
           />
-          <select
+          <Select
             value={form.kpiId}
             onChange={(e) => setForm({ ...form, kpiId: e.target.value })}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
+            className="bsc-select">
             <option value="">KPI (opcional)</option>
             {kpis.map((k) => (
               <option key={k.id} value={k.id}>
-                {k.codigo ? `${k.codigo} · ` : ''}
-                {k.nombre}
+                {k.codigo ?? k.id} · {k.nombre}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={form.tareaId}
             onChange={(e) => setForm({ ...form, tareaId: e.target.value })}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
+            className="bsc-select">
             <option value="">Tarea (opcional)</option>
             {tareas.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.titulo}
               </option>
             ))}
-          </select>
+          </Select>
 
           {form.tipo === 'ENLACE' && (
             <input

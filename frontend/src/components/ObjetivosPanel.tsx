@@ -8,6 +8,7 @@ import {
   ModalNuevaTarea,
 } from './FlujoRapido'
 import type { Objetivo, Perspectiva, ReporteObjetivo, Usuario } from '../data/types'
+import { Select } from './Select'
 
 const INPUT: React.CSSProperties = {
   background: 'var(--surface-2)',
@@ -191,31 +192,29 @@ export function ObjetivosPanel({
             className="rounded-lg border px-2 py-1.5 text-xs sm:col-span-2"
             style={INPUT}
           />
-          <select
+          <Select
             value={form.perspectivaId}
             onChange={(e) => setForm({ ...form, perspectivaId: e.target.value })}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={INPUT}
+            className="bsc-select"
           >
             {perspectivas.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nombre}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={form.responsableId}
             onChange={(e) => setForm({ ...form, responsableId: e.target.value })}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={INPUT}
+            className="bsc-select"
           >
             <option value="">Sin responsable</option>
             {usuarios.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.nombre}
+                {u.nombre} ({u.rol})
               </option>
             ))}
-          </select>
+          </Select>
           <input
             placeholder="Descripción"
             value={form.descripcion}
@@ -289,21 +288,20 @@ export function ObjetivosPanel({
 
               {editandoEste && (
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <select
+                  <Select
                     value={formEdicion.responsableId}
                     onChange={(e) =>
                       setFormEdicion({ ...formEdicion, responsableId: e.target.value })
                     }
-                    className="rounded-lg border px-2 py-1.5 text-[11px]"
-                    style={INPUT}
+                    className="text-[11px] bsc-select"
                   >
                     <option value="">Sin responsable</option>
                     {usuarios.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.nombre}
+                        {u.nombre} ({u.rol})
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   <input
                     type="number"
                     value={formEdicion.ponderacion}
@@ -443,16 +441,15 @@ export function ObjetivosPanel({
               </div>
               <label className="block">
                 <span className={LABEL}>Dirección</span>
-                <select
+                <Select
                   value={formKpi.tipo}
                   onChange={(e) => setFormKpi({ ...formKpi, tipo: e.target.value })}
-                  className="w-full rounded-lg border px-2.5 py-1.5 text-xs outline-none"
-                  style={INPUT}
+                  className="px-2.5 bsc-select"
                 >
                   <option value="MAYOR_MEJOR">Mayor es mejor</option>
                   <option value="MENOR_MEJOR">Menor es mejor</option>
                   <option value="RANGO">Rango objetivo</option>
-                </select>
+                </Select>
               </label>
               {errorKpi && <p className="text-[11px] text-[#ef4444]">{errorKpi}</p>}
               <div className="flex justify-end gap-2">

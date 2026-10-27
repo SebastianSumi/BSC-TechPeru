@@ -3,8 +3,16 @@ import { KeyRound, RefreshCcw, UserPlus, Users, Trash2, Link2 } from 'lucide-rea
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Asignacion, Kpi, RolNombre, Usuario } from '../data/types'
+import { Select } from './Select'
 
 const ROLES: RolNombre[] = ['ADMIN', 'GERENTE', 'ANALISTA', 'RESPONSABLE']
+
+function rolDescripcion(
+  roles: { nombre: RolNombre; descripcion: string }[],
+  rol: RolNombre,
+): string {
+  return roles.find((r) => r.nombre === rol)?.descripcion ?? ''
+}
 
 type Permiso = { area: string; accion: string; roles: RolNombre[] }
 
@@ -42,6 +50,7 @@ export function AdminPanel() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [kpis, setKpis] = useState<Kpi[]>([])
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([])
+  const [roles, setRoles] = useState<{ nombre: RolNombre; descripcion: string }[]>([])
   const [cargando, setCargando] = useState(true)
   const [form, setForm] = useState({ email: '', nombre: '', password: '', rol: 'ANALISTA' as RolNombre })
   const [asig, setAsig] = useState({ usuarioId: '', kpiId: '' })
@@ -54,14 +63,16 @@ export function AdminPanel() {
     setCargando(true)
     setError('')
     try {
-      const [u, k, a] = await Promise.all([
+      const [u, k, a, r] = await Promise.all([
         api.listarUsuarios(),
         api.listarKpis(),
         api.listarAsignaciones(),
+        api.listarRoles().catch(() => [] as { nombre: RolNombre; descripcion: string }[]),
       ])
       setUsuarios(u)
       setKpis(k)
       setAsignaciones(a)
+      setRoles(r)
     } catch (err) {
       setError(
         `No se pudo cargar la información: ${err instanceof Error ? err.message : String(err)}`,
@@ -210,18 +221,18 @@ export function AdminPanel() {
                       </td>
                       <td className="px-2 py-2">
                         {esAdmin ? (
-                          <select
+                          <Select
                             value={u.rol}
                             onChange={(e) => cambiarRol(u.id, e.target.value as RolNombre)}
-                            className="rounded-md border px-2 py-1 text-xs outline-none"
-                            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                            className="bsc-select--sm"
+                            title={rolDescripcion(roles, u.rol)}
                           >
-                            {ROLES.map((r) => (
+                            {(roles.length ? roles.map((r) => r.nombre) : ROLES).map((r) => (
                               <option key={r} value={r}>
                                 {r}
                               </option>
                             ))}
-                          </select>
+                          </Select>
                         ) : (
                           <span className="text-xs">{u.rol}</span>
                         )}
@@ -264,18 +275,17 @@ export function AdminPanel() {
               <Input label="Contraseña" value={form.password} onChange={(v) => setForm({ ...form, password: v })} type="password" />
               <div>
                 <label className="mb-1 block text-[11px] text-[var(--muted)]">Rol</label>
-                <select
+                <Select
                   value={form.rol}
                   onChange={(e) => setForm({ ...form, rol: e.target.value as RolNombre })}
-                  className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
-                  style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
                 >
-                  {ROLES.map((r) => (
+                  {(roles.length ? roles.map((r) => r.nombre) : ROLES).map((r) => (
                     <option key={r} value={r}>
                       {r}
+                      {rolDescripcion(roles, r) ? ` · ${rolDescripcion(roles, r)}` : ''}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <button
                 type="submit"
@@ -339,11 +349,9 @@ export function AdminPanel() {
         <form onSubmit={crearAsignacion} className="mb-4 flex flex-wrap items-end gap-3">
           <div>
             <label className="mb-1 block text-[11px] text-[var(--muted)]">Usuario</label>
-            <select
+            <Select
               value={asig.usuarioId}
               onChange={(e) => setAsig({ ...asig, usuarioId: e.target.value })}
-              className="rounded-lg border px-3 py-2 text-sm outline-none"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
             >
               <option value="">Selecciona…</option>
               {usuarios.map((u) => (
@@ -351,23 +359,21 @@ export function AdminPanel() {
                   {u.nombre} ({u.rol})
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className="mb-1 block text-[11px] text-[var(--muted)]">Objetivo / KPI</label>
-            <select
+            <Select
               value={asig.kpiId}
               onChange={(e) => setAsig({ ...asig, kpiId: e.target.value })}
-              className="rounded-lg border px-3 py-2 text-sm outline-none"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
             >
               <option value="">Selecciona…</option>
               {kpis.map((k) => (
                 <option key={k.id} value={k.id}>
-                  {k.nombre}
+                  {k.codigo ?? k.id} · {k.nombre}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <button
             type="submit"

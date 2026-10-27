@@ -3,6 +3,7 @@ import { RefreshCcw } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Alerta, Periodo } from '../data/types'
+import { Select } from './Select'
 
 export function AlertasPanel({ periodos }: { periodos: Periodo[] }) {
   const { puede } = useAuth()
@@ -48,19 +49,17 @@ export function AlertasPanel({ periodos }: { periodos: Periodo[] }) {
       <div className="flex flex-wrap items-center justify-end gap-3">
         {puedeGestionar && (
           <div className="flex items-center gap-2">
-            <select
+            <Select
               value={periodoId}
               onChange={(e) => setPeriodoId(e.target.value)}
-              className="rounded-lg border px-2 py-1.5 text-xs"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-            >
-              <option value="">Período...</option>
+              className="bsc-select">
+              <option value="">Selecciona un período…</option>
               {periodos.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.nombre}
                 </option>
               ))}
-            </select>
+            </Select>
             <button
               onClick={generar}
               disabled={!periodoId || generando}

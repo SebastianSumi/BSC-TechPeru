@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Config, Empresa, Perspectiva } from '../data/types'
+import { Select } from './Select'
 
 export function ConfigPanel({ empresaId }: { empresaId: string }) {
   const { puede } = useAuth()
@@ -193,7 +194,7 @@ export function ConfigPanel({ empresaId }: { empresaId: string }) {
           </label>
           <label className="text-xs">
             <span className="text-[var(--muted)]">Formato de porcentaje</span>
-            <select
+            <Select
               value={config.formatoPorcentaje ?? 'DECIMAL'}
               onChange={(e) =>
                 setConfig({
@@ -202,17 +203,15 @@ export function ConfigPanel({ empresaId }: { empresaId: string }) {
                 })
               }
               disabled={!esAdmin}
-              className="mt-1 w-full rounded-lg border px-2 py-1.5"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-            >
+              className="mt-1 bsc-select">
               <option value="DECIMAL">Decimal</option>
               <option value="ENTERO">Entero</option>
               <option value="AUTO">Automático</option>
-            </select>
+            </Select>
           </label>
           <label className="text-xs">
             <span className="text-[var(--muted)]">Agregación de objetivos</span>
-            <select
+            <Select
               value={config.agregacionObjetivo ?? 'PROMEDIO'}
               onChange={(e) =>
                 setConfig({
@@ -221,17 +220,15 @@ export function ConfigPanel({ empresaId }: { empresaId: string }) {
                 })
               }
               disabled={!esAdmin}
-              className="mt-1 w-full rounded-lg border px-2 py-1.5"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-            >
+              className="mt-1 bsc-select">
               <option value="PROMEDIO">Promedio</option>
               <option value="PONDERADO">Ponderado</option>
               <option value="MINIMO">Mínimo</option>
-            </select>
+            </Select>
           </label>
           <label className="text-xs">
             <span className="text-[var(--muted)]">Agregación entre períodos</span>
-            <select
+            <Select
               value={config.agregacionPeriodos ?? 'ULTIMO'}
               onChange={(e) =>
                 setConfig({
@@ -240,18 +237,16 @@ export function ConfigPanel({ empresaId }: { empresaId: string }) {
                 })
               }
               disabled={!esAdmin}
-              className="mt-1 w-full rounded-lg border px-2 py-1.5"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-            >
+              className="mt-1 bsc-select">
               <option value="ULTIMO">Último</option>
               <option value="SUMA">Suma</option>
               <option value="PROMEDIO">Promedio</option>
               <option value="ACUMULADO">Acumulado</option>
-            </select>
+            </Select>
           </label>
           <label className="text-xs">
             <span className="text-[var(--muted)]">Agregación de resultados de tareas</span>
-            <select
+            <Select
               value={config.agregacionResultados ?? 'NINGUNA'}
               onChange={(e) =>
                 setConfig({
@@ -261,14 +256,12 @@ export function ConfigPanel({ empresaId }: { empresaId: string }) {
                 })
               }
               disabled={!esAdmin}
-              className="mt-1 w-full rounded-lg border px-2 py-1.5"
-              style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-            >
+              className="mt-1 bsc-select">
               <option value="NINGUNA">No aplicar</option>
               <option value="SUMA">Suma</option>
               <option value="ULTIMO">Último</option>
               <option value="PROMEDIO">Promedio</option>
-            </select>
+            </Select>
           </label>
           <div className="flex flex-col gap-2 pt-4">
             <label className="flex items-center gap-2">

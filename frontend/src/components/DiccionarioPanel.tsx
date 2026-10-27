@@ -11,6 +11,7 @@ import {
 } from './FlujoRapido'
 import type { Kpi, Objetivo, Periodo, Perspectiva } from '../data/types'
 import { EstadoBadge } from './EstadoBadge'
+import { Select } from './Select'
 
 const INPUT: React.CSSProperties = {
   background: 'var(--surface-2)',
@@ -161,11 +162,10 @@ export function DiccionarioPanel({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <select
+          <Select
             value={perspectivaId}
             onChange={(e) => setPerspectivaId(e.target.value)}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={INPUT}
+            className="bsc-select"
           >
             <option value="">Todas las perspectivas</option>
             {perspectivas.map((p) => (
@@ -173,12 +173,11 @@ export function DiccionarioPanel({
                 {p.nombre}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={periodoId}
             onChange={(e) => setPeriodoId(e.target.value)}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={INPUT}
+            className="bsc-select"
           >
             <option value="">Sin período</option>
             {periodos.map((p) => (
@@ -186,12 +185,11 @@ export function DiccionarioPanel({
                 {p.nombre}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={objetivoFiltro}
             onChange={(e) => setObjetivoFiltro(e.target.value)}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={INPUT}
+            className="bsc-select"
           >
             <option value="">Todos los objetivos</option>
             {objetivos.map((o) => (
@@ -199,7 +197,7 @@ export function DiccionarioPanel({
                 {o.codigo} · {o.nombre}
               </option>
             ))}
-          </select>
+          </Select>
           {objetivoFiltro && onLimpiarFiltro && (
             <button
               onClick={() => {
@@ -260,11 +258,10 @@ export function DiccionarioPanel({
             </label>
             <label className="block">
               <span className={LABEL}>Perspectiva *</span>
-              <select
+              <Select
                 value={form.perspectivaId}
                 onChange={(e) => cambiarPerspectivaForm(e.target.value)}
-                className="w-full rounded-lg border px-2.5 py-1.5 text-xs outline-none"
-                style={INPUT}
+                className="px-2.5 bsc-select"
               >
                 <option value="">Selecciona…</option>
                 {perspectivas.map((p) => (
@@ -272,15 +269,14 @@ export function DiccionarioPanel({
                     {p.nombre}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="block sm:col-span-2">
               <span className={LABEL}>Objetivo *</span>
-              <select
+              <Select
                 value={form.objetivoId}
                 onChange={(e) => setForm({ ...form, objetivoId: e.target.value })}
-                className="w-full rounded-lg border px-2.5 py-1.5 text-xs outline-none"
-                style={INPUT}
+                className="px-2.5 bsc-select"
               >
                 <option value="">
                   {form.perspectivaId ? 'Selecciona…' : 'Elige primero la perspectiva'}
@@ -290,34 +286,32 @@ export function DiccionarioPanel({
                     {o.codigo} · {o.nombre}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="block">
               <span className={LABEL}>Dirección</span>
-              <select
+              <Select
                 value={form.tipo}
                 onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                className="w-full rounded-lg border px-2.5 py-1.5 text-xs outline-none"
-                style={INPUT}
+                className="px-2.5 bsc-select"
               >
                 <option value="MAYOR_MEJOR">Mayor es mejor</option>
                 <option value="MENOR_MEJOR">Menor es mejor</option>
                 <option value="RANGO">Rango objetivo</option>
-              </select>
+              </Select>
             </label>
             <label className="block">
               <span className={LABEL}>Frecuencia</span>
-              <select
+              <Select
                 value={form.frecuencia}
                 onChange={(e) => setForm({ ...form, frecuencia: e.target.value })}
-                className="w-full rounded-lg border px-2.5 py-1.5 text-xs outline-none"
-                style={INPUT}
+                className="px-2.5 bsc-select"
               >
                 <option value="MENSUAL">Mensual</option>
                 <option value="TRIMESTRAL">Trimestral</option>
                 <option value="SEMESTRAL">Semestral</option>
                 <option value="ANUAL">Anual</option>
-              </select>
+              </Select>
             </label>
             <label className="block">
               <span className={LABEL}>Meta *</span>

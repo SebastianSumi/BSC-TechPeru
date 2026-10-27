@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Pin, PinOff, Plus, Trash2 } from 'lucide-react'
 import { api } from '../lib/api'
 import type { Kpi, Objetivo, Recomendacion } from '../data/types'
+import { Select } from './Select'
 
 export function RecomendacionesPanel() {
   const [recomendaciones, setRecomendaciones] = useState<Recomendacion[]>([])
@@ -72,28 +73,24 @@ export function RecomendacionesPanel() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <select
+          <Select
             value={filtroObjetivo}
             onChange={(e) => {
               setFiltroObjetivo(e.target.value)
               setFiltroKpi('')
             }}
-            className="rounded-lg border px-2.5 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
+            className="px-2.5 bsc-select">
             <option value="">Todos los objetivos</option>
             {objetivos.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.codigo} · {o.nombre}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={filtroKpi}
             onChange={(e) => setFiltroKpi(e.target.value)}
-            className="rounded-lg border px-2.5 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
+            className="px-2.5 bsc-select">
             <option value="">Todos los KPI</option>
             {kpis
               .filter(
@@ -101,10 +98,10 @@ export function RecomendacionesPanel() {
               )
               .map((k) => (
                 <option key={k.id} value={k.id}>
-                  {k.nombre}
+                  {k.codigo ?? k.id} · {k.nombre}
                 </option>
               ))}
-          </select>
+          </Select>
           <label className="flex items-center gap-1.5 text-xs text-[var(--muted)]">
             <input
               type="checkbox"
@@ -135,34 +132,30 @@ export function RecomendacionesPanel() {
             className="rounded-lg border px-2 py-1.5 text-xs sm:col-span-2"
             style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
           />
-          <select
+          <Select
             value={form.objetivoId}
             onChange={(e) =>
               setForm({ ...form, objetivoId: e.target.value, kpiId: '' })
             }
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
+            className="bsc-select">
             <option value="">Sin objetivo</option>
             {objetivos.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.codigo} · {o.nombre}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={form.kpiId}
             onChange={(e) => setForm({ ...form, kpiId: e.target.value })}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
+            className="bsc-select">
             <option value="">Sin KPI</option>
             {kpisFiltro.map((k) => (
               <option key={k.id} value={k.id}>
-                {k.nombre}
+                {k.codigo ?? k.id} · {k.nombre}
               </option>
             ))}
-          </select>
+          </Select>
           <button
             onClick={crear}
             className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white"

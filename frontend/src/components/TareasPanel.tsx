@@ -9,6 +9,7 @@ import type {
   Tarea,
   Usuario,
 } from '../data/types'
+import { Select } from './Select'
 
 const ESTADOS: { value: EstadoTarea; label: string }[] = [
   { value: 'PENDIENTE', label: 'Pendiente' },
@@ -135,47 +136,41 @@ export function TareasPanel() {
             className="rounded-lg border px-2 py-1.5 text-xs"
             style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
           />
-          <select
+          <Select
             value={form.objetivoId}
             onChange={(e) =>
               setForm({ ...form, objetivoId: e.target.value, kpiId: '' })
             }
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
-            <option value="">Objetivo...</option>
+            className="bsc-select">
+            <option value="">Selecciona un objetivo…</option>
             {objetivos.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.codigo} · {o.nombre}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={form.kpiId}
             onChange={(e) => setForm({ ...form, kpiId: e.target.value })}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
+            className="bsc-select">
             <option value="">KPI (opcional)</option>
             {kpisObjetivo.map((k) => (
               <option key={k.id} value={k.id}>
-                {k.nombre}
+                {k.codigo ?? k.id} · {k.nombre}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             value={form.responsableId}
             onChange={(e) => setForm({ ...form, responsableId: e.target.value })}
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
+            className="bsc-select">
             <option value="">Sin responsable</option>
             {usuarios.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.nombre}
+                {u.nombre} ({u.rol})
               </option>
             ))}
-          </select>
+          </Select>
           <input
             type="date"
             value={form.fechaInicio}
@@ -190,20 +185,18 @@ export function TareasPanel() {
             className="rounded-lg border px-2 py-1.5 text-xs"
             style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
           />
-          <select
+          <Select
             value={form.estado}
             onChange={(e) =>
               setForm({ ...form, estado: e.target.value as EstadoTarea })
             }
-            className="rounded-lg border px-2 py-1.5 text-xs"
-            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)' }}
-          >
+            className="bsc-select">
             {ESTADOS.map((e) => (
               <option key={e.value} value={e.value}>
                 {e.label}
               </option>
             ))}
-          </select>
+          </Select>
           <input
             type="number"
             min={0}
@@ -250,21 +243,16 @@ export function TareasPanel() {
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <select
+                  <Select
                     value={t.estado}
                     onChange={(e) => actualizar(t, { estado: e.target.value })}
-                    className="rounded-lg border px-2 py-1 text-[10px]"
-                    style={{
-                      background: 'var(--surface-2)',
-                      borderColor: 'var(--border)',
-                    }}
-                  >
+                    className="text-[10px] bsc-select">
                     {ESTADOS.map((e) => (
                       <option key={e.value} value={e.value}>
                         {e.label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   <button
                     onClick={() => eliminar(t.id)}
                     className="rounded-lg border p-1.5 text-[#ef4444]"
