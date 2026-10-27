@@ -102,9 +102,11 @@ model Empresa {
   id          String        @id @default(cuid())
   nombre      String        @unique
   sigla       String
-  sector      String        @default("")
-  color       String        @default("#2563eb")
-  descripcion String        @default("")
+  sector       String        @default("")
+  color        String        @default("#2563eb")
+  descripcion  String        @default("")
+  vision       String        @default("")
+  mision       String        @default("")
   activo      Boolean       @default(true)
   createdAt   DateTime      @default(now())
   periodos        Periodo[]

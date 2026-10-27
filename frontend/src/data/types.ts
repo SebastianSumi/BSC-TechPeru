@@ -126,6 +126,7 @@ export interface Usuario {
   nombre: string
   rol: RolNombre
   activo?: boolean
+  asignaciones?: { id: string }[]
 }
 
 export interface Periodo {
@@ -360,6 +361,8 @@ export interface Empresa {
   sector: string
   color: string
   descripcion: string
+  vision?: string
+  mision?: string
   activo: boolean
   _count?: { objetivos: number; kpis: number; periodos: number }
 }

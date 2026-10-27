@@ -11,6 +11,10 @@ export const EMPRESAS = [
     sector: 'Tecnología',
     color: '#2563eb',
     descripcion: 'Soluciones tecnológicas y transformación digital para empresas peruanas.',
+    vision:
+      'Ser la compañía de tecnología más confiable del Perú, reconocida por transformar la estrategia de sus clientes en resultados medibles.',
+    mision:
+      'Diseñar e implementar soluciones digitales que permitan a las empresas peruanas medir, gestionar y cumplir su Balanced Scorecard con datos confiables y en tiempo real.',
     activo: true,
   },
   {
@@ -20,6 +24,10 @@ export const EMPRESAS = [
     sector: 'Retail',
     color: '#ea580c',
     descripcion: 'Cadena omnicanal de tiendas por departamento con presencia nacional.',
+    vision:
+      'Ser la cadena omnicanal líder del Perú en experiencia de cliente y rentabilidad sostenible.',
+    mision:
+      'Ofrecer a los peruanos productos de calidad, precios justos y una experiencia de compra integrada, gestionando el desempeño con indicadores claros en cada tienda y canal.',
     activo: true,
   },
   {
@@ -29,6 +37,10 @@ export const EMPRESAS = [
     sector: 'Salud',
     color: '#0d9488',
     descripcion: 'Red de clínicas y centros médicos especializados de alta complejidad.',
+    vision:
+      'Ser la red de salud privada más recomendada del Perú por su calidad clínica y atención centrada en el paciente.',
+    mision:
+      'Brindar atención médica especializada y segura, mejorando continuamente la salud de nuestras personas con estándares clínicos verificables y compromiso humano.',
     activo: true,
   },
 ];

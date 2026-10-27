@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  Compass,
   FileBarChart,
   FileWarning,
   FolderKanban,
@@ -63,6 +64,7 @@ import { AprobacionesPanel } from './components/AprobacionesPanel'
 import { ComparacionPanel } from './components/ComparacionPanel'
 import { ImportPanel } from './components/ImportPanel'
 import { ConfigPanel } from './components/ConfigPanel'
+import { VisionMisionPanel } from './components/VisionMisionPanel'
 import { AuditoriaPanel } from './components/AuditoriaPanel'
 import type { KpiEvaluado, Periodo, PerspectivaId, RolNombre } from './data/types'
 
@@ -73,6 +75,7 @@ type Tab =
   | 'reportes'
   | 'mapa'
   | 'objetivos'
+  | 'vision'
   | 'perspectivas'
   | 'tareas'
   | 'recomendaciones'
@@ -121,6 +124,13 @@ const TABS: TabDef[] = [
     desc: 'Define resultados prioritarios y alinea cada objetivo con su perspectiva.',
     group: 'Estratégico',
     icon: <Target size={16} />,
+  },
+  {
+    id: 'vision',
+    label: 'Visión y Misión',
+    desc: 'Consulta y actualiza el propósito y la dirección de la compañía activa.',
+    group: 'Estratégico',
+    icon: <Compass size={16} />,
   },
   {
     id: 'perspectivas',
@@ -279,7 +289,7 @@ const TABS: TabDef[] = [
   {
     id: 'admin',
     label: 'Administración',
-    desc: 'Gestiona usuarios, roles y accesos del cuadro de mando.',
+    desc: 'Gestiona usuarios, roles y consulta la matriz de permisos.',
     group: 'Sistema',
     icon: <UsersIcon size={16} />,
     roles: ['ADMIN', 'GERENTE'],
@@ -595,6 +605,7 @@ function AppContent() {
             tab !== 'admin' &&
             tab !== 'mapa' &&
             tab !== 'objetivos' &&
+            tab !== 'vision' &&
             tab !== 'perspectivas' &&
             tab !== 'tareas' &&
             tab !== 'recomendaciones' &&
@@ -669,7 +680,12 @@ function AppContent() {
           {tab === 'aprobaciones' && <AprobacionesPanel />}
           {tab === 'comparacion' && <ComparacionPanel periodos={periodos} />}
           {tab === 'importacion' && <ImportPanel periodos={periodos} />}
-          {tab === 'config' && <ConfigPanel />}
+          {tab === 'config' && (
+            <ConfigPanel key={activaId} empresaId={activaId} />
+          )}
+          {tab === 'vision' && (
+            <VisionMisionPanel key={activaId} empresaId={activaId} />
+          )}
           {tab === 'auditoria' && <AuditoriaPanel />}
           {tab === 'reportes' && <Reportes periodoId={periodoId || null} />}
           {tab === 'admin' && <AdminPanel />}

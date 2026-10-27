@@ -59,6 +59,15 @@ export function setToken(token: string | null) {
   else localStorage.removeItem(TOKEN_KEY)
 }
 
+type UsuarioApi = Omit<Usuario, 'rol'> & {
+  rol: RolNombre | { id: string; nombre: RolNombre }
+}
+
+function normalizarUsuario(u: UsuarioApi): Usuario {
+  const rol = typeof u.rol === 'object' && u.rol !== null ? u.rol.nombre : u.rol
+  return { ...u, rol }
+}
+
 async function requestBlob(path: string, options: RequestInit = {}) {
   const token = getToken()
   const res = await fetch(`${API_URL}${conEmpresa(path)}`, {
@@ -107,6 +116,17 @@ export const api = {
 
   obtenerEmpresa: (id: string) => request<Empresa>(`/empresas/${id}`),
 
+  actualizarEmpresa: (
+    id: string,
+    data: Partial<
+      Pick<Empresa, 'nombre' | 'sigla' | 'sector' | 'color' | 'descripcion' | 'vision' | 'mision'>
+    >,
+  ) =>
+    request<Empresa>(`/empresas/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
   login: (email: string, password: string) =>
     request<{ accessToken: string; usuario: Usuario }>('/auth/login', {
       method: 'POST',
@@ -115,7 +135,10 @@ export const api = {
 
   me: () => request<Usuario>('/auth/me'),
 
-  listarUsuarios: () => request<Usuario[]>('/auth/usuarios'),
+  listarUsuarios: () =>
+    request<UsuarioApi[]>('/auth/usuarios').then((lista) =>
+      lista.map(normalizarUsuario),
+    ),
 
   crearUsuario: (data: {
     email: string
@@ -123,19 +146,19 @@ export const api = {
     password: string
     rol: RolNombre
   }) =>
-    request<Usuario>('/auth/usuarios', {
+    request<UsuarioApi>('/auth/usuarios', {
       method: 'POST',
       body: JSON.stringify(data),
-    }),
+    }).then(normalizarUsuario),
 
   actualizarUsuario: (
     id: string,
     data: { nombre?: string; rol?: RolNombre; activo?: boolean },
   ) =>
-    request<Usuario>(`/auth/usuarios/${id}`, {
+    request<UsuarioApi>(`/auth/usuarios/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
-    }),
+    }).then(normalizarUsuario),
 
   listarRoles: () =>
     request<{ id: string; nombre: RolNombre; descripcion: string }[]>('/auth/roles'),

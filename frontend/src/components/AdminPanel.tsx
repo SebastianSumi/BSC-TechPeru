@@ -1,16 +1,48 @@
 import { useEffect, useState } from 'react'
-import { UserPlus, Trash2, Link2 } from 'lucide-react'
+import { KeyRound, RefreshCcw, UserPlus, Users, Trash2, Link2 } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import type { Asignacion, Kpi, RolNombre, Usuario } from '../data/types'
 
 const ROLES: RolNombre[] = ['ADMIN', 'GERENTE', 'ANALISTA', 'RESPONSABLE']
 
+type Permiso = { area: string; accion: string; roles: RolNombre[] }
+
+const TODOS: RolNombre[] = ['ADMIN', 'GERENTE', 'ANALISTA', 'RESPONSABLE']
+
+const PERMISOS: Permiso[] = [
+  { area: 'Estrategia', accion: 'Consultar dashboard, perspectivas, KPIs y reportes', roles: TODOS },
+  { area: 'Estrategia', accion: 'Editar valores reales y registrar mediciones', roles: ['ADMIN', 'GERENTE', 'ANALISTA'] },
+  { area: 'Estrategia', accion: 'Crear y editar objetivos estratégicos', roles: ['ADMIN', 'GERENTE'] },
+  { area: 'Estrategia', accion: 'Crear indicadores en el diccionario KPI', roles: ['ADMIN', 'GERENTE'] },
+  { area: 'Estrategia', accion: 'Editar indicadores, asignar equipo y desactivar', roles: ['ADMIN', 'GERENTE', 'RESPONSABLE'] },
+  { area: 'Estrategia', accion: 'Ver historial de versiones del plan', roles: TODOS },
+  { area: 'Estrategia', accion: 'Publicar o archivar versiones del plan', roles: ['ADMIN', 'GERENTE'] },
+  { area: 'Proyectos', accion: 'Crear y eliminar iniciativas', roles: ['ADMIN', 'GERENTE'] },
+  { area: 'Proyectos', accion: 'Editar iniciativas (fechas, avance, presupuesto, estado)', roles: ['ADMIN', 'GERENTE', 'ANALISTA'] },
+  { area: 'Proyectos', accion: 'Crear tareas, resultados y recomendaciones', roles: TODOS },
+  { area: 'Proyectos', accion: 'Registrar desviaciones y compromisos', roles: ['ADMIN', 'GERENTE', 'ANALISTA'] },
+  { area: 'Proyectos', accion: 'Subir y validar evidencias', roles: TODOS },
+  { area: 'Control', accion: 'Generar alertas automáticas por período', roles: ['ADMIN', 'GERENTE', 'ANALISTA'] },
+  { area: 'Control', accion: 'Ver la auditoría de cambios', roles: ['ADMIN', 'GERENTE'] },
+  { area: 'Control', accion: 'Importar mediciones masivamente (CSV)', roles: ['ADMIN', 'GERENTE', 'ANALISTA'] },
+  { area: 'Control', accion: 'Solicitar aprobación de mediciones', roles: ['ADMIN', 'GERENTE', 'ANALISTA'] },
+  { area: 'Control', accion: 'Aprobar o rechazar mediciones', roles: ['ADMIN', 'GERENTE'] },
+  { area: 'Administración', accion: 'Gestionar períodos (crear, activar)', roles: ['ADMIN', 'GERENTE'] },
+  { area: 'Administración', accion: 'Asignar objetivos (KPIs) a responsables', roles: ['ADMIN', 'GERENTE'] },
+  { area: 'Administración', accion: 'Ver el listado de usuarios', roles: ['ADMIN', 'GERENTE'] },
+  { area: 'Administración', accion: 'Crear usuarios y cambiar roles o estado', roles: ['ADMIN'] },
+  { area: 'Administración', accion: 'Configuración global (umbrales, formato, agregación)', roles: ['ADMIN'] },
+  { area: 'Administración', accion: 'Ponderaciones de las perspectivas', roles: ['ADMIN', 'GERENTE'] },
+  { area: 'Administración', accion: 'Identidad de la compañía (sigla, color, visión y misión)', roles: ['ADMIN', 'GERENTE'] },
+]
+
 export function AdminPanel() {
   const { puede } = useAuth()
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [kpis, setKpis] = useState<Kpi[]>([])
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([])
+  const [cargando, setCargando] = useState(true)
   const [form, setForm] = useState({ email: '', nombre: '', password: '', rol: 'ANALISTA' as RolNombre })
   const [asig, setAsig] = useState({ usuarioId: '', kpiId: '' })
   const [error, setError] = useState('')
@@ -18,13 +50,30 @@ export function AdminPanel() {
 
   const esAdmin = puede('ADMIN')
 
-  const cargar = () => {
-    api.listarUsuarios().then(setUsuarios).catch(() => {})
-    api.listarKpis().then(setKpis).catch(() => {})
-    api.listarAsignaciones().then(setAsignaciones).catch(() => {})
+  const cargar = async () => {
+    setCargando(true)
+    setError('')
+    try {
+      const [u, k, a] = await Promise.all([
+        api.listarUsuarios(),
+        api.listarKpis(),
+        api.listarAsignaciones(),
+      ])
+      setUsuarios(u)
+      setKpis(k)
+      setAsignaciones(a)
+    } catch (err) {
+      setError(
+        `No se pudo cargar la información: ${err instanceof Error ? err.message : String(err)}`,
+      )
+    } finally {
+      setCargando(false)
+    }
   }
 
-  useEffect(cargar, [])
+  useEffect(() => {
+    cargar()
+  }, [])
 
   const crearUsuario = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,18 +85,28 @@ export function AdminPanel() {
       setMsg('Usuario creado')
       cargar()
     } catch (err) {
-      setError(String(err))
+      setError(String(err instanceof Error ? err.message : err))
     }
   }
 
   const cambiarRol = async (id: string, rol: RolNombre) => {
-    await api.actualizarUsuario(id, { rol })
-    cargar()
+    try {
+      await api.actualizarUsuario(id, { rol })
+      setMsg('Rol actualizado')
+      cargar()
+    } catch (err) {
+      setError(String(err instanceof Error ? err.message : err))
+    }
   }
 
   const toggleActivo = async (u: Usuario) => {
-    await api.actualizarUsuario(u.id, { activo: !(u.activo ?? true) })
-    cargar()
+    try {
+      await api.actualizarUsuario(u.id, { activo: !(u.activo ?? true) })
+      setMsg((u.activo ?? true) ? 'Usuario desactivado' : 'Usuario activado')
+      cargar()
+    } catch (err) {
+      setError(String(err instanceof Error ? err.message : err))
+    }
   }
 
   const crearAsignacion = async (e: React.FormEvent) => {
@@ -61,19 +120,62 @@ export function AdminPanel() {
       setAsig({ usuarioId: '', kpiId: '' })
       cargar()
     } catch (err) {
-      setError(String(err))
+      setError(String(err instanceof Error ? err.message : err))
     }
   }
 
   const quitarAsignacion = async (id: string) => {
-    await api.eliminarAsignacion(id)
-    cargar()
+    try {
+      await api.eliminarAsignacion(id)
+      setMsg('Asignación eliminada')
+      cargar()
+    } catch (err) {
+      setError(String(err instanceof Error ? err.message : err))
+    }
   }
+
+  const activos = usuarios.filter((u) => u.activo ?? true).length
+  const porRol = ROLES.map((r) => ({ rol: r, total: usuarios.filter((u) => u.rol === r).length }))
 
   return (
     <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <ResumenUsuarios
+          titulo="Usuarios"
+          valor={usuarios.length}
+          detalle={`${activos} activos`}
+          icon={<Users size={16} />}
+        />
+        <ResumenUsuarios
+          titulo="Objetivos asignados"
+          valor={asignaciones.length}
+          detalle="asignaciones vigentes"
+          icon={<Link2 size={16} />}
+        />
+        <div className="bsc-card p-4">
+          <p className="text-xs text-[var(--muted)]">Por rol</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {porRol.map((p) => (
+              <span
+                key={p.rol}
+                className="rounded-md px-2 py-0.5 text-[11px] font-semibold"
+                style={{ background: 'var(--surface-2)', color: 'var(--text)' }}
+              >
+                {p.rol}: {p.total}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
 
-      {error && <p className="text-sm text-[#ef4444]">{error}</p>}
+      {error && (
+        <p className="flex items-center gap-2 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-3 py-2 text-sm text-[#b91c1c]">
+          {error}
+          <button onClick={cargar} className="ml-auto inline-flex items-center gap-1 text-xs font-semibold underline">
+            <RefreshCcw size={12} /> Reintentar
+          </button>
+        </p>
+      )}
       {msg && <p className="text-sm text-[#10b981]">{msg}</p>}
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -84,61 +186,71 @@ export function AdminPanel() {
               <p>Administra roles y estado de las cuentas.</p>
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="bsc-table">
-              <thead>
-                <tr>
-                  <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Nombre</th>
-                  <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Rol</th>
-                  <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usuarios.map((u) => (
-                  <tr key={u.id} className="border-t" style={{ borderColor: 'var(--border)' }}>
-                    <td className="px-2 py-2">
-                      <p className="font-medium">{u.nombre}</p>
-                      <p className="text-[11px] text-[var(--muted)]">{u.email}</p>
-                    </td>
-                    <td className="px-2 py-2">
-                      {esAdmin ? (
-                        <select
-                          value={u.rol}
-                          onChange={(e) => cambiarRol(u.id, e.target.value as RolNombre)}
-                          className="rounded-md border px-2 py-1 text-xs outline-none"
-                          style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                        >
-                          {ROLES.map((r) => (
-                            <option key={r} value={r}>
-                              {r}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="text-xs">{u.rol}</span>
-                      )}
-                    </td>
-                    <td className="px-2 py-2">
-                      {esAdmin ? (
-                        <button
-                          onClick={() => toggleActivo(u)}
-                          className="rounded px-2 py-0.5 text-[11px] font-semibold"
-                          style={{
-                            background: (u.activo ?? true) ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                            color: (u.activo ?? true) ? '#10b981' : '#ef4444',
-                          }}
-                        >
-                          {(u.activo ?? true) ? 'Activo' : 'Inactivo'}
-                        </button>
-                      ) : (
-                        <span className="text-xs text-[var(--muted)]">—</span>
-                      )}
-                    </td>
+          {cargando ? (
+            <p className="text-sm text-[var(--muted)]">Cargando usuarios…</p>
+          ) : usuarios.length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">No hay usuarios para mostrar.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="bsc-table">
+                <thead>
+                  <tr>
+                    <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Nombre</th>
+                    <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Rol</th>
+                    <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Objetivos</th>
+                    <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Estado</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {usuarios.map((u) => (
+                    <tr key={u.id} className="border-t" style={{ borderColor: 'var(--border)' }}>
+                      <td className="px-2 py-2">
+                        <p className="font-medium">{u.nombre}</p>
+                        <p className="text-[11px] text-[var(--muted)]">{u.email}</p>
+                      </td>
+                      <td className="px-2 py-2">
+                        {esAdmin ? (
+                          <select
+                            value={u.rol}
+                            onChange={(e) => cambiarRol(u.id, e.target.value as RolNombre)}
+                            className="rounded-md border px-2 py-1 text-xs outline-none"
+                            style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                          >
+                            {ROLES.map((r) => (
+                              <option key={r} value={r}>
+                                {r}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-xs">{u.rol}</span>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-xs">
+                        {u.asignaciones?.length ?? asignaciones.filter((a) => a.usuario?.id === u.id).length}
+                      </td>
+                      <td className="px-2 py-2">
+                        {esAdmin ? (
+                          <button
+                            onClick={() => toggleActivo(u)}
+                            className="rounded px-2 py-0.5 text-[11px] font-semibold"
+                            style={{
+                              background: (u.activo ?? true) ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                              color: (u.activo ?? true) ? '#10b981' : '#ef4444',
+                            }}
+                          >
+                            {(u.activo ?? true) ? 'Activo' : 'Inactivo'}
+                          </button>
+                        ) : (
+                          <span className="text-xs text-[var(--muted)]">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {esAdmin && (
@@ -175,6 +287,48 @@ export function AdminPanel() {
             </div>
           </form>
         )}
+      </div>
+
+      <div className="bsc-card bsc-panel">
+        <p className="mb-1 flex items-center gap-1.5 text-sm font-bold">
+          <KeyRound size={16} /> Permisos por rol
+        </p>
+        <p className="mb-3 text-xs text-[var(--muted)]">
+          Matriz de capacidades según los roles del sistema. Los permisos se aplican en el
+          backend: cada endpoint verifica el rol antes de ejecutar la operación.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="bsc-table">
+            <thead>
+              <tr>
+                <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Área</th>
+                <th className="px-2 py-2 text-left text-xs text-[var(--muted)]">Capacidad</th>
+                {ROLES.map((r) => (
+                  <th key={r} className="px-2 py-2 text-center text-xs text-[var(--muted)]">
+                    {r}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {PERMISOS.map((p) => (
+                <tr key={p.accion} className="border-t" style={{ borderColor: 'var(--border)' }}>
+                  <td className="px-2 py-2 text-[11px] text-[var(--muted)]">{p.area}</td>
+                  <td className="px-2 py-2 text-xs">{p.accion}</td>
+                  {ROLES.map((r) => (
+                    <td key={r} className="px-2 py-2 text-center">
+                      {p.roles.includes(r) ? (
+                        <span className="font-bold text-[#10b981]">✓</span>
+                      ) : (
+                        <span className="text-[var(--muted)]">·</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="bsc-card bsc-panel">
@@ -248,6 +402,28 @@ export function AdminPanel() {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function ResumenUsuarios({
+  titulo,
+  valor,
+  detalle,
+  icon,
+}: {
+  titulo: string
+  valor: number
+  detalle: string
+  icon: React.ReactNode
+}) {
+  return (
+    <div className="bsc-card p-4">
+      <p className="flex items-center gap-1.5 text-xs text-[var(--muted)]">
+        {icon} {titulo}
+      </p>
+      <p className="mt-1 text-2xl font-bold">{valor}</p>
+      <p className="text-[11px] text-[var(--muted)]">{detalle}</p>
     </div>
   )
 }
